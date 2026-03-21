@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Color By Numbers — Free Online Paint By Numbers Game</title>
+<meta name="description" content="Paint by numbers online free. Upload your own photos or pick from the gallery, choose difficulty, and drag to fill color categories. Touchscreen ready, no download needed.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cortexgames.com/games/color-by-numbers/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Color By Numbers — Free Paint By Numbers Game">
+<meta property="og:description" content="Paint by numbers online. Upload photos or pick from the gallery. Drag to fill colors and reveal beautiful images.">
+<meta property="og:url" content="https://cortexgames.com/games/color-by-numbers/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Color By Numbers",
+  "description": "A relaxing paint-by-numbers game. Upload photos or pick from the gallery, choose difficulty, and paint by dragging to reveal beautiful images.",
+  "genre": ["Puzzle", "Relaxing", "Coloring"],
+  "gamePlatform": "Web Browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "url": "https://cortexgames.com/games/color-by-numbers/"
+}
+</script>
+<style>
+:root{--bg:#0f0f1a;--panel:#161625;--panel2:#1c1c30;--border:#2a2a40;--accent:#ff7b54;--accent2:#ff9a76;--accent-glow:rgba(255,123,84,0.4);--text:#e0e0e8;--text2:#888898;--success:#2ecc71;--white:#f8f8fc}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;height:100dvh;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+
+/* Background canvas */
+#bg-canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+body>*:not(#bg-canvas){position:relative;z-index:1}
+
+/* ---- Screens ---- */
+.screen{display:none;height:100vh;height:100dvh;flex-direction:column}.screen.active{display:flex}
+
+/* ---- Gallery ---- */
+#gallery{overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,var(--bg) 0%,#0c0c18 100%)}
+.gallery-header{text-align:center;padding:28px 20px 8px}
+.gallery-header h1{font-size:2.4rem;font-weight:800;letter-spacing:-1.5px;background:linear-gradient(135deg,#ff7b54,#ffb26b,#ffd56b,#ff7b54);background-size:300% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4s ease-in-out infinite;text-shadow:none;filter:drop-shadow(0 0 20px rgba(255,123,84,0.2))}
+@keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.gallery-header p{color:var(--text2);font-size:.9rem;margin-top:4px}
+.cat-bar{display:flex;justify-content:center;gap:6px;padding:14px 20px;flex-wrap:wrap}
+.cat-btn{padding:7px 18px;border:1.5px solid var(--border);background:transparent;color:var(--text2);border-radius:20px;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .2s;letter-spacing:.3px}
+.cat-btn:hover{border-color:var(--accent);color:var(--accent)}
+.cat-btn.active{border-color:var(--accent);color:var(--bg);background:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;padding:10px 24px 14px;align-content:start}
+.card{position:relative;border-radius:14px;overflow:hidden;cursor:pointer;background:var(--panel);border:2px solid var(--border);transition:all .25s;aspect-ratio:4/3}
+.card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 12px 32px rgba(255,123,84,.2),0 0 0 1px rgba(255,123,84,.1)}
+.card canvas,.card img{width:100%;height:100%;object-fit:cover;display:block}
+.card .lbl{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:linear-gradient(transparent,rgba(0,0,0,.88));font-size:.82rem;font-weight:600;letter-spacing:.2px}
+.card .badge{position:absolute;top:8px;right:8px;padding:2px 9px;border-radius:10px;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.badge.easy{background:#2ecc71;color:#000}.badge.medium{background:#f1c40f;color:#000}.badge.hard{background:#e74c3c;color:#fff}
+.upload-zone{display:block;position:relative;margin:4px 24px 20px;border:2px dashed #333;border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all .25s;background:var(--panel)}
+.upload-zone:hover{border-color:var(--accent);background:var(--panel2)}
+.upload-zone .icon{font-size:2rem;margin-bottom:6px;opacity:.5}
+.upload-zone p{color:var(--text2);font-size:.88rem}
+.upload-zone strong{color:var(--accent)}
+
+/* ---- Modal ---- */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.modal-bg.active{display:flex}
+.modal{background:rgba(22,22,37,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px;padding:28px 24px;max-width:420px;width:92%;border:1px solid rgba(255,123,84,.15);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(255,123,84,.05)}
+.modal h2{text-align:center;margin-bottom:18px;color:var(--accent);font-size:1.3rem}
+.modal-opts{display:flex;flex-direction:column;gap:8px}
+.modal-opt{padding:16px 18px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center}
+.modal-opt:hover{border-color:var(--accent);background:var(--panel2)}
+.modal-opt .name{font-weight:700;font-size:1.05rem}.modal-opt .desc{color:var(--text2);font-size:.78rem;margin-top:2px}
+.modal-cancel{display:block;margin:14px auto 0;padding:7px 22px;background:none;border:1px solid #444;color:var(--text2);border-radius:8px;cursor:pointer;font-size:.85rem}
+.modal-cancel:hover{border-color:#888;color:#ccc}
+
+/* ---- Processing ---- */
+#processing{position:fixed;inset:0;background:rgba(15,15,26,.96);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column}
+#processing.active{display:flex}
+.spin{width:52px;height:52px;border:3px solid #222;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:16px}
+@keyframes sp{to{transform:rotate(360deg)}}
+#processing p{color:var(--text2);font-size:.95rem}
+
+/* ---- Game ---- */
+#game{background:var(--bg)}
+.toolbar{display:flex;align-items:center;padding:6px 12px;background:rgba(22,22,37,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);gap:8px;border-bottom:1px solid rgba(255,255,255,.06);min-height:48px;flex-wrap:wrap}
+.toolbar .back{padding:5px 12px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);border-radius:8px;cursor:pointer;font-size:.8rem;white-space:nowrap;transition:all .15s}
+.toolbar .back:hover{background:#282848;color:var(--text)}
+.toolbar .title{flex:1;font-weight:600;font-size:.9rem;text-align:center;color:#bbb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:60px}
+.toolbar .btn{padding:4px 10px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);border-radius:6px;cursor:pointer;font-size:.72rem;font-weight:600;transition:all .15s;white-space:nowrap}
+.toolbar .btn:hover{background:#282848;color:var(--text)}
+.toolbar .btn.active{color:var(--accent);border-color:var(--accent)}
+.prog-wrap{width:140px;height:7px;background:#1a1a2e;border-radius:4px;overflow:hidden;flex-shrink:0}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#ffd56b);width:0%;transition:width .35s ease;border-radius:4px}
+.toolbar .pct{font-size:.78rem;color:var(--text2);width:46px;text-align:right;flex-shrink:0;font-weight:600}
+.cells-count{font-size:.68rem;color:#555;white-space:nowrap}
+
+.game-body{display:flex;flex:1;overflow:hidden}
+.canvas-area{flex:1;overflow:hidden;position:relative;background:#08080f;display:flex;align-items:center;justify-content:center}
+.canvas-area canvas{image-rendering:auto;transition:none;touch-action:none}
+.canvas-area{touch-action:none}
+
+/* ---- Palette ---- */
+.palette{width:210px;background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 6px;display:flex;flex-direction:column;gap:3px}
+.pal-head{font-size:.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;padding:4px 8px;font-weight:700}
+.pal-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;cursor:pointer;border:2px solid transparent;transition:all .12s;position:relative}
+.pal-item:hover{background:var(--panel2)}
+.pal-item.sel{border-color:var(--accent);background:rgba(255,123,84,.08)}
+.pal-item.done{opacity:.4}
+.pal-item .sw{width:32px;height:32px;border-radius:8px;border:1.5px solid rgba(255,255,255,.12);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;text-shadow:0 1px 2px rgba(0,0,0,.5);transition:transform .15s}
+.pal-item.sel .sw{transform:scale(1.1)}
+.pal-item .meta{flex:1;min-width:0}
+.pal-item .meta .num{font-weight:700;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-item .meta .left{font-size:.68rem;color:var(--text2)}
+.pal-item .prog{width:100%;height:3px;background:#1a1a2e;border-radius:2px;margin-top:3px;overflow:hidden}
+.pal-item .prog span{display:block;height:100%;border-radius:2px;transition:width .3s}
+.pal-item .fillall{position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:2px 6px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);border-radius:4px;font-size:.6rem;cursor:pointer;opacity:0;transition:opacity .15s;font-weight:600}
+.pal-item:hover .fillall{opacity:1}
+.pal-item.done .fillall{display:none}
+.pal-item .chk{color:var(--success);font-size:.95rem;display:none;font-weight:800}
+.pal-item.done .chk{display:block}
+
+/* ---- Complete ---- */
+.done-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:50;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.done-overlay.active{display:flex}
+.done-overlay h2{font-size:2.6rem;color:#ffd56b;margin-bottom:8px;text-shadow:0 0 40px rgba(255,213,107,.5),0 0 80px rgba(255,123,84,.2);font-weight:800;animation:doneGlow 2s ease-in-out infinite alternate}
+@keyframes doneGlow{0%{text-shadow:0 0 40px rgba(255,213,107,.5),0 0 80px rgba(255,123,84,.2)}100%{text-shadow:0 0 60px rgba(255,213,107,.7),0 0 120px rgba(255,123,84,.4)}}
+.done-overlay p{color:#ccc;margin-bottom:20px;font-size:1rem}
+.done-overlay button{padding:12px 36px;background:linear-gradient(135deg,var(--accent),#ffd56b);border:none;color:#000;border-radius:12px;font-size:1rem;cursor:pointer;font-weight:700;transition:all .2s;box-shadow:0 4px 20px rgba(255,123,84,.3)}
+.done-overlay button:hover{filter:brightness(1.15);transform:translateY(-2px);box-shadow:0 6px 28px rgba(255,123,84,.4)}
+
+.zoom-label{position:absolute;bottom:8px;left:10px;font-size:.65rem;color:#333;pointer-events:none}
+.shortcut-hint{position:absolute;bottom:8px;right:10px;font-size:.65rem;color:#333;pointer-events:none}
+
+/* ---- Magnifier ---- */
+.magnifier{display:none;position:fixed;width:200px;height:200px;border-radius:50%;border:3px solid var(--accent);box-shadow:0 0 20px rgba(255,123,84,.35),0 4px 20px rgba(0,0,0,.6);pointer-events:none;z-index:60;overflow:hidden;background:#111}
+.magnifier.active{display:block}
+.magnifier canvas{width:100%;height:100%;display:block}
+.magnifier .crosshair{position:absolute;top:50%;left:50%;width:12px;height:12px;transform:translate(-50%,-50%)}
+.magnifier .crosshair::before,.magnifier .crosshair::after{content:'';position:absolute;background:rgba(255,123,84,.6)}
+.magnifier .crosshair::before{width:1px;height:12px;left:50%;top:0;transform:translateX(-50%)}
+.magnifier .crosshair::after{width:12px;height:1px;top:50%;left:0;transform:translateY(-50%)}
+.mag-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--accent);background:rgba(0,0,0,.7);padding:3px 10px;border-radius:6px;pointer-events:none;opacity:0;transition:opacity .3s}
+.mag-hint.show{opacity:1}
+
+/* ---- Remaining Banner ---- */
+.remain-banner{display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(22,22,37,.92);border:1px solid var(--accent);border-radius:10px;padding:6px 16px;font-size:.78rem;color:var(--accent);font-weight:600;z-index:40;pointer-events:none;backdrop-filter:blur(4px);white-space:nowrap}
+.remain-banner.show{display:block}
+
+/* ---- Touch / Mobile ---- */
+@media(pointer:coarse){
+  .toolbar .btn,.toolbar .back{min-height:38px;min-width:38px;font-size:.78rem;padding:6px 12px}
+  .pal-item{padding:6px;min-height:44px}
+  .pal-item .sw{width:38px;height:38px;font-size:.9rem}
+  .shortcut-hint{display:none}
+  .zoom-label{font-size:.6rem}
+  .modal-opt{padding:18px;min-height:56px}
+  .cat-btn{padding:10px 20px;font-size:.9rem}
+  .card{min-height:120px}
+  .upload-zone{padding:36px}
+}
+@media(max-width:900px){
+  .palette{width:68px;padding:4px 2px;gap:3px}
+  .pal-head{display:none}
+  .pal-item{padding:5px;gap:0;flex-direction:column;justify-content:center}
+  .pal-item .sw{width:40px;height:40px;font-size:.9rem}
+  .pal-item .meta,.pal-item .fillall{display:none}
+  .pal-item .chk{font-size:.7rem}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));padding:8px 12px;gap:10px}
+  .gallery-header h1{font-size:1.8rem}
+  .toolbar{gap:4px;padding:4px 8px;flex-wrap:wrap;justify-content:center}
+  .toolbar .title{font-size:.78rem;order:-1;width:100%;text-align:center;padding-bottom:2px}
+  .cells-count{display:none}
+}
+@media(max-width:500px){
+  .palette{width:52px}.pal-item .sw{width:34px;height:34px;font-size:.78rem}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+  .toolbar .btn{padding:5px 8px;font-size:.7rem;min-width:32px}
+  .toolbar .back{font-size:.72rem;padding:5px 8px}
+}
+
+/* How to play */
+.how-to-play{max-width:700px;margin:2rem auto;padding:2rem 1.5rem;background:rgba(22,22,37,.6);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(8px)}
+.how-to-play h2{font-size:1.375rem;font-weight:700;margin-bottom:1rem;color:var(--accent)}
+.how-to-play ul{padding-left:1.25rem;color:var(--text2)}
+.how-to-play li{margin-bottom:.5rem}
+.how-to-play li strong{color:var(--text)}
+
+/* More games */
+.more-games{max-width:700px;margin:0 auto 2rem;padding:2rem 1.5rem;text-align:center}
+.more-games h2{font-size:1.25rem;margin-bottom:1rem;color:var(--accent)}
+.more-games-grid{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.more-game-link{display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.25rem;background:var(--panel);border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:600;font-size:.9rem;text-decoration:none;transition:all .2s}
+.more-game-link:hover{border-color:var(--accent);background:var(--panel2);color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(255,123,84,.15)}
+
+/* Side promo */
+.side-promo{position:fixed;right:12px;top:50%;transform:translateY(-50%);width:140px;padding:.75rem;background:rgba(15,15,30,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);border-radius:12px;text-decoration:none;color:var(--text);text-align:center;z-index:100;transition:border-color .2s,box-shadow .2s}
+.side-promo:hover{border-color:var(--accent);box-shadow:0 4px 24px rgba(255,123,84,.25)}
+.side-promo .sp-icon{font-size:1.5rem;display:block;margin-bottom:.35rem}
+.side-promo .sp-title{font-size:.6875rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--accent)}
+.side-promo .sp-desc{font-size:.625rem;color:var(--text2);line-height:1.3;margin:.25rem 0 .5rem}
+.side-promo .sp-cta{display:inline-block;padding:.3rem .75rem;border-radius:100px;background:linear-gradient(135deg,var(--accent),#ff9a76);color:#fff;font-size:.625rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+@media(max-width:1200px){.side-promo{display:none}}
+
+/* Footer */
+.site-footer{text-align:center;padding:2rem 1.5rem 3rem;color:var(--text2);font-size:.875rem;border-top:1px solid var(--border);max-width:700px;margin:0 auto}
+.site-footer nav{margin-bottom:.75rem}
+.site-footer nav a{margin:0 .75rem;color:var(--text2);text-decoration:none;transition:color .2s}
+.site-footer nav a:hover{color:var(--accent)}
+
+/* Celebration particles canvas */
+#confetti-canvas{position:absolute;inset:0;z-index:51;pointer-events:none;display:none}
+#confetti-canvas.active{display:block}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- ============ GALLERY ============ -->
+<div id="gallery" class="screen active">
+  <div class="gallery-header">
+    <h1>Color By Numbers</h1>
+    <p>Pick an image, choose difficulty, and paint by dragging</p>
+  </div>
+  <div class="cat-bar" id="cat-bar"></div>
+  <div class="grid" id="grid"></div>
+  <input type="file" id="file-input" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+
+  <section class="how-to-play">
+    <h2>How to Play Color By Numbers</h2>
+    <ul>
+      <li><strong>Pick an image</strong> from the gallery or upload your own photo.</li>
+      <li><strong>Choose difficulty</strong> — Easy (8 colors), Medium (14), or Hard (22) color categories.</li>
+      <li><strong>Select a color</strong> from the palette on the right (or tap on mobile).</li>
+      <li><strong>Drag to paint</strong> — click and drag across cells matching your selected color to fill them in.</li>
+      <li><strong>Reveal the image</strong> — as you fill cells, the original photo colors emerge as a mosaic.</li>
+      <li>Use <strong>Peek</strong> (hold) to glimpse the original, <strong>Glow</strong> to highlight matching cells, and <strong>Mag</strong> for a magnifier.</li>
+      <li>Press <strong>Ctrl+Z</strong> to undo, or number keys <strong>1-9</strong> to quickly switch colors.</li>
+    </ul>
+  </section>
+
+  <section class="more-games">
+    <h2>More Free Games</h2>
+    <div class="more-games-grid">
+      <a href="../gem-fusion/index.html" class="more-game-link">&#x1F48E; Gem Fusion</a>
+      <a href="../tetris-blitz/index.html" class="more-game-link">&#x1F9F1; Tetris Blitz</a>
+      <a href="../brix3d/index.html" class="more-game-link">&#x1F9F1; BRIX 3D</a>
+      <a href="../../index.html" class="more-game-link">&#x1F3AE; All Games</a>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <nav aria-label="Footer navigation">
+      <a href="#about">About</a>
+      <a href="#privacy">Privacy</a>
+    </nav>
+    <p>&copy; 2026 Cortex Games</p>
+  </footer>
+</div>
+
+<a href="https://bryman.gumroad.com/l/pfoyf" target="_blank" rel="noopener" class="side-promo">
+  <span class="sp-icon">&#x1F4BB;</span>
+  <div class="sp-title">Claude Code Starter Kit</div>
+  <div class="sp-desc">10 templates + memory system + autonomous workflows</div>
+  <span class="sp-cta">$9 on Gumroad</span>
+</a>
+
+<!-- ============ DIFFICULTY MODAL ============ -->
+<div class="modal-bg" id="diff-modal">
+  <div class="modal">
+    <h2>Select Difficulty</h2>
+    <div class="modal-opts">
+      <div class="modal-opt" data-colors="8" data-cols="40">
+        <div><div class="name">Easy</div><div class="desc">8 color groups &middot; ~1200 cells &middot; reveals real colors</div></div>
+        <span class="badge easy">easy</span>
+      </div>
+      <div class="modal-opt" data-colors="14" data-cols="60">
+        <div><div class="name">Medium</div><div class="desc">14 color groups &middot; ~2700 cells &middot; detailed mosaic</div></div>
+        <span class="badge medium">medium</span>
+      </div>
+      <div class="modal-opt" data-colors="22" data-cols="80">
+        <div><div class="name">Hard</div><div class="desc">22 color groups &middot; ~4800 cells &middot; photo-realistic</div></div>
+        <span class="badge hard">hard</span>
+      </div>
+    </div>
+    <button class="modal-cancel" id="diff-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- ============ PROCESSING ============ -->
+<div id="processing"><div class="spin"></div><p id="proc-msg">Processing image...</p></div>
+
+<!-- ============ GAME ============ -->
+<div id="game" class="screen">
+  <div class="toolbar">
+    <button class="back" id="back-btn">&larr; Back</button>
+    <span class="title" id="game-title"></span>
+    <button class="btn" id="btn-hint" title="Hold to peek at original">Peek</button>
+    <button class="btn active" id="btn-nums" title="Toggle numbers">123</button>
+    <button class="btn" id="btn-highlight" title="Highlight matching cells">Glow</button>
+    <button class="btn" id="btn-mag" title="Toggle magnifier mode">Mag</button>
+    <button class="btn" id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
+    <div class="prog-wrap"><div class="prog-fill" id="prog-fill"></div></div>
+    <span class="pct" id="prog-pct">0%</span>
+    <span class="cells-count" id="cells-count"></span>
+  </div>
+  <div class="game-body">
+    <div class="canvas-area" id="canvas-area">
+      <canvas id="cv"></canvas>
+      <canvas id="confetti-canvas"></canvas>
+      <div class="done-overlay" id="done-overlay">
+        <h2>Masterpiece!</h2>
+        <p>Every cell painted perfectly.</p>
+        <button id="done-btn">Back to Gallery</button>
+      </div>
+      <div class="remain-banner" id="remain-banner"></div>
+      <div class="mag-hint" id="mag-hint">Tap Mag or hold Shift to magnify</div>
+      <div class="zoom-label" id="zoom-label">Scroll = zoom &middot; Right-drag = pan</div>
+      <div class="shortcut-hint">1-9 = colors &middot; Ctrl+Z = undo &middot; Shift = magnify</div>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+</div>
+
+<!-- Magnifier -->
+<div class="magnifier" id="magnifier">
+  <canvas id="mag-cv" width="400" height="400"></canvas>
+  <div class="crosshair"></div>
+</div>
+
+<script>
+// ===================== ANIMATED BACKGROUND =====================
+const BgFx = (() => {
+  const cv = document.getElementById('bg-canvas');
+  const c = cv.getContext('2d');
+  let w, h, running = true;
+  const blobs = [], particles = [], strokes = [];
+
+  function resize() {
+    w = cv.width = window.innerWidth;
+    h = cv.height = window.innerHeight;
+  }
+
+  function init() {
+    resize();
+    window.addEventListener('resize', resize);
+    // Color blobs — soft watercolor circles
+    const blobColors = [
+      'rgba(255,123,84,', 'rgba(255,213,107,', 'rgba(46,204,113,',
+      'rgba(59,130,246,', 'rgba(236,72,153,', 'rgba(168,85,247,',
+      'rgba(255,154,118,', 'rgba(255,215,0,'
+    ];
+    for (let i = 0; i < 12; i++) {
+      blobs.push({
+        x: Math.random(), y: Math.random(),
+        r: 0.08 + Math.random() * 0.15,
+        vx: (Math.random() - 0.5) * 0.0002,
+        vy: (Math.random() - 0.5) * 0.0002,
+        color: blobColors[i % blobColors.length],
+        alpha: 0.03 + Math.random() * 0.04,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+    // Floating paint particles
+    for (let i = 0; i < 40; i++) {
+      particles.push({
+        x: Math.random(), y: Math.random(),
+        s: 1.5 + Math.random() * 4,
+        vx: (Math.random() - 0.5) * 0.0003,
+        vy: -0.0001 - Math.random() * 0.0003,
+        hue: Math.random() * 360,
+        alpha: 0.15 + Math.random() * 0.25,
+        life: Math.random()
+      });
+    }
+    // Brush strokes — faint curved lines
+    for (let i = 0; i < 8; i++) {
+      strokes.push({
+        x: Math.random(), y: Math.random(),
+        len: 0.1 + Math.random() * 0.2,
+        angle: Math.random() * Math.PI * 2,
+        curve: (Math.random() - 0.5) * 0.5,
+        hue: Math.random() * 360,
+        alpha: 0.015 + Math.random() * 0.025,
+        drift: Math.random() * Math.PI * 2
+      });
+    }
+    draw();
+  }
+
+  function draw() {
+    if (!running) { requestAnimationFrame(draw); return; }
+    const t = performance.now();
+    c.clearRect(0, 0, w, h);
+
+    // Base gradient
+    const bg = c.createRadialGradient(w * 0.5, h * 0.3, 0, w * 0.5, h * 0.5, w * 0.8);
+    bg.addColorStop(0, 'rgba(20,18,35,1)');
+    bg.addColorStop(1, 'rgba(15,15,26,1)');
+    c.fillStyle = bg;
+    c.fillRect(0, 0, w, h);
+
+    // Watercolor blobs
+    for (const b of blobs) {
+      b.x += b.vx + Math.sin(t * 0.0003 + b.phase) * 0.00005;
+      b.y += b.vy + Math.cos(t * 0.0004 + b.phase) * 0.00004;
+      if (b.x < -0.2) b.x = 1.2; if (b.x > 1.2) b.x = -0.2;
+      if (b.y < -0.2) b.y = 1.2; if (b.y > 1.2) b.y = -0.2;
+      const pulse = 1 + Math.sin(t * 0.001 + b.phase) * 0.15;
+      const gr = c.createRadialGradient(b.x * w, b.y * h, 0, b.x * w, b.y * h, b.r * w * pulse);
+      gr.addColorStop(0, b.color + (b.alpha * 1.5) + ')');
+      gr.addColorStop(0.4, b.color + (b.alpha * 0.8) + ')');
+      gr.addColorStop(1, b.color + '0)');
+      c.fillStyle = gr;
+      c.fillRect(0, 0, w, h);
+    }
+
+    // Brush strokes
+    for (const s of strokes) {
+      s.drift += 0.0003;
+      const sx = (s.x + Math.sin(s.drift) * 0.02) * w;
+      const sy = (s.y + Math.cos(s.drift * 0.7) * 0.02) * h;
+      c.save();
+      c.globalAlpha = s.alpha + Math.sin(t * 0.0005 + s.drift) * 0.008;
+      c.strokeStyle = `hsla(${s.hue},70%,65%,1)`;
+      c.lineWidth = 2 + Math.sin(t * 0.001) * 0.5;
+      c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(sx, sy);
+      const ex = sx + Math.cos(s.angle) * s.len * w;
+      const ey = sy + Math.sin(s.angle) * s.len * h;
+      const cx = (sx + ex) / 2 + Math.sin(s.curve) * 40;
+      const cy = (sy + ey) / 2 + Math.cos(s.curve) * 40;
+      c.quadraticCurveTo(cx, cy, ex, ey);
+      c.stroke();
+      c.restore();
+    }
+
+    // Paint particles
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.0003;
+      if (p.life <= 0 || p.y < -0.05) {
+        p.x = Math.random(); p.y = 1.05;
+        p.life = 1; p.hue = Math.random() * 360;
+      }
+      c.globalAlpha = p.alpha * p.life;
+      c.fillStyle = `hsla(${p.hue},75%,65%,1)`;
+      c.beginPath();
+      c.arc(p.x * w, p.y * h, p.s, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha = 1;
+
+    requestAnimationFrame(draw);
+  }
+
+  return {
+    init,
+    pause() { running = false; },
+    resume() { running = true; }
+  };
+})();
+
+// ===================== CONFETTI =====================
+const Confetti = (() => {
+  let cv, c, particles, animId;
+
+  function launch(area) {
+    cv = document.getElementById('confetti-canvas');
+    cv.width = area.clientWidth;
+    cv.height = area.clientHeight;
+    c = cv.getContext('2d');
+    cv.classList.add('active');
+    particles = [];
+    const colors = ['#ff7b54','#ffd56b','#2ecc71','#3b82f6','#ec4899','#a855f7','#ff9a76','#f59e0b'];
+    for (let i = 0; i < 120; i++) {
+      particles.push({
+        x: cv.width / 2 + (Math.random() - 0.5) * cv.width * 0.3,
+        y: cv.height / 2,
+        vx: (Math.random() - 0.5) * 12,
+        vy: -3 - Math.random() * 10,
+        r: 3 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * Math.PI * 2,
+        rv: (Math.random() - 0.5) * 0.2,
+        life: 1,
+        shape: Math.random() > 0.5 ? 'rect' : 'circle'
+      });
+    }
+    animate();
+  }
+
+  function animate() {
+    c.clearRect(0, 0, cv.width, cv.height);
+    let alive = 0;
+    for (const p of particles) {
+      p.x += p.vx;
+      p.vy += 0.15;
+      p.y += p.vy;
+      p.vx *= 0.99;
+      p.rot += p.rv;
+      p.life -= 0.008;
+      if (p.life <= 0) continue;
+      alive++;
+      c.save();
+      c.translate(p.x, p.y);
+      c.rotate(p.rot);
+      c.globalAlpha = Math.min(1, p.life * 2);
+      c.fillStyle = p.color;
+      if (p.shape === 'rect') {
+        c.fillRect(-p.r, -p.r * 0.5, p.r * 2, p.r);
+      } else {
+        c.beginPath();
+        c.arc(0, 0, p.r, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+    if (alive > 0) {
+      animId = requestAnimationFrame(animate);
+    } else {
+      cv.classList.remove('active');
+    }
+  }
+
+  function stop() {
+    if (animId) cancelAnimationFrame(animId);
+    if (cv) cv.classList.remove('active');
+  }
+
+  return { launch, stop };
+})();
+
+// ===================== AUDIO =====================
+const SFX = (() => {
+  let ctx;
+  const get = () => { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); return ctx; };
+  let lastFill = 0;
+  return {
+    fill() {
+      const now = performance.now();
+      if (now - lastFill < 40) return; // throttle during fast drag
+      lastFill = now;
+      const c = get(), t = c.currentTime;
+      const o = c.createOscillator(), g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.frequency.value = 500 + Math.random() * 400;
+      o.type = 'sine'; g.gain.value = 0.06;
+      o.start(t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08); o.stop(t + 0.08);
+    },
+    complete() {
+      const c = get(), t = c.currentTime;
+      [523,659,784,1047,1319].forEach((f,i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.connect(g); g.connect(c.destination);
+        o.frequency.value = f; o.type = 'triangle'; g.gain.value = 0.1;
+        o.start(t + i*0.1); g.gain.exponentialRampToValueAtTime(0.001, t + i*0.1 + 0.4); o.stop(t + i*0.1 + 0.4);
+      });
+    },
+    colorDone() {
+      const c = get(), t = c.currentTime;
+      [660,880].forEach((f,i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.connect(g); g.connect(c.destination);
+        o.frequency.value = f; o.type = 'sine'; g.gain.value = 0.07;
+        o.start(t+i*.08); g.gain.exponentialRampToValueAtTime(0.001, t+i*.08+.2); o.stop(t+i*.08+.2);
+      });
+    }
+  };
+})();
+
+// ===================== K-MEANS COLOR QUANTIZER =====================
+// Extracts true dominant colors from photos using k-means++ clustering
+// on sampled full-image pixels — NOT cell averages
+class KMeansQuantizer {
+  // Sample up to maxSamples pixels from raw image data
+  _samplePixels(data, w, h, maxSamples) {
+    const total = w * h;
+    const step = Math.max(1, Math.floor(total / maxSamples));
+    const samples = [];
+    for (let i = 0; i < total; i += step) {
+      const j = i * 4;
+      samples.push([data[j], data[j+1], data[j+2]]);
+    }
+    return samples;
+  }
+
+  // K-means++ initialization: pick well-spread starting centers
+  _initCenters(samples, k) {
+    const centers = [];
+    // First center: random sample
+    centers.push([...samples[Math.floor(Math.random() * samples.length)]]);
+    for (let ci = 1; ci < k; ci++) {
+      // Compute D(x)^2 for each sample
+      const dists = new Float64Array(samples.length);
+      let totalDist = 0;
+      for (let i = 0; i < samples.length; i++) {
+        let minD = Infinity;
+        for (const c of centers) {
+          const dr = samples[i][0]-c[0], dg = samples[i][1]-c[1], db = samples[i][2]-c[2];
+          const d = dr*dr + dg*dg + db*db;
+          if (d < minD) minD = d;
+        }
+        dists[i] = minD;
+        totalDist += minD;
+      }
+      // Weighted random selection
+      let r = Math.random() * totalDist;
+      for (let i = 0; i < samples.length; i++) {
+        r -= dists[i];
+        if (r <= 0) { centers.push([...samples[i]]); break; }
+      }
+      if (centers.length <= ci) centers.push([...samples[Math.floor(Math.random() * samples.length)]]);
+    }
+    return centers;
+  }
+
+  // Run k-means clustering
+  quantize(imageData, w, h, k, maxIter = 20) {
+    const samples = this._samplePixels(imageData, w, h, 8000);
+    if (samples.length === 0) return [[128,128,128]];
+
+    let centers = this._initCenters(samples, k);
+    const assignments = new Uint8Array(samples.length);
+
+    for (let iter = 0; iter < maxIter; iter++) {
+      let changed = 0;
+
+      // Assign each sample to nearest center
+      for (let i = 0; i < samples.length; i++) {
+        const [sr,sg,sb] = samples[i];
+        let bestC = 0, bestD = Infinity;
+        for (let c = 0; c < centers.length; c++) {
+          const dr = sr-centers[c][0], dg = sg-centers[c][1], db = sb-centers[c][2];
+          const d = dr*dr + dg*dg + db*db;
+          if (d < bestD) { bestD = d; bestC = c; }
+        }
+        if (assignments[i] !== bestC) { assignments[i] = bestC; changed++; }
+      }
+
+      // Converged if < 0.5% changed
+      if (changed < samples.length * 0.005) break;
+
+      // Update centers to mean of assigned samples
+      const sums = new Array(k);
+      const counts = new Uint32Array(k);
+      for (let c = 0; c < k; c++) sums[c] = [0,0,0];
+      for (let i = 0; i < samples.length; i++) {
+        const c = assignments[i];
+        sums[c][0] += samples[i][0];
+        sums[c][1] += samples[i][1];
+        sums[c][2] += samples[i][2];
+        counts[c]++;
+      }
+      for (let c = 0; c < k; c++) {
+        if (counts[c] > 0) {
+          centers[c] = [
+            Math.round(sums[c][0] / counts[c]),
+            Math.round(sums[c][1] / counts[c]),
+            Math.round(sums[c][2] / counts[c])
+          ];
+        }
+      }
+    }
+
+    // Remove empty clusters (no samples assigned)
+    const used = new Set();
+    for (const a of assignments) used.add(a);
+    return centers.filter((_, i) => used.has(i));
+  }
+}
+
+// ===================== COLOR NAMER =====================
+// Converts RGB to a human-readable perceptual category name
+function nameColor(r, g, b) {
+  // RGB to HSL
+  const rf = r/255, gf = g/255, bf = b/255;
+  const mx = Math.max(rf,gf,bf), mn = Math.min(rf,gf,bf), d = mx-mn;
+  let h = 0, s = 0, l = (mx+mn)/2;
+  if (d > 0) {
+    s = l > 0.5 ? d/(2-mx-mn) : d/(mx+mn);
+    if (mx === rf) h = ((gf-bf)/d + 6) % 6 * 60;
+    else if (mx === gf) h = ((bf-rf)/d + 2) * 60;
+    else h = ((rf-gf)/d + 4) * 60;
+  }
+
+  // Very low saturation = grays
+  if (s < 0.08) {
+    if (l < 0.15) return 'Black';
+    if (l < 0.35) return 'Dark Gray';
+    if (l < 0.65) return 'Gray';
+    if (l < 0.85) return 'Light Gray';
+    return 'White';
+  }
+
+  // Hue name
+  let hue;
+  if (h < 15 || h >= 345) hue = 'Red';
+  else if (h < 40) hue = 'Orange';
+  else if (h < 70) hue = 'Yellow';
+  else if (h < 85) hue = 'Lime';
+  else if (h < 160) hue = 'Green';
+  else if (h < 185) hue = 'Teal';
+  else if (h < 210) hue = 'Cyan';
+  else if (h < 255) hue = 'Blue';
+  else if (h < 285) hue = 'Purple';
+  else if (h < 330) hue = 'Pink';
+  else hue = 'Rose';
+
+  // Lightness prefix
+  let prefix = '';
+  if (l < 0.2) prefix = 'Dark ';
+  else if (l < 0.35) prefix = 'Deep ';
+  else if (l > 0.8) prefix = 'Pale ';
+  else if (l > 0.65) prefix = 'Light ';
+
+  // Saturation modifier
+  if (s < 0.25 && prefix === '') prefix = 'Muted ';
+
+  return prefix + hue;
+}
+
+// ===================== GRID PROCESSOR =====================
+// Perceptual category system: cells store ACTUAL colors from the photo,
+// grouped into named categories ("Dark Greens", "Sky Blues") for gameplay.
+// When a cell is filled, it reveals its real color — not a flat swatch.
+class GridProcessor {
+  constructor() { this.quant = new KMeansQuantizer(); }
+
+  process(img, numCategories, gridCols) {
+    // Draw image to temp canvas
+    let w = img.width || img.naturalWidth || 480;
+    let h = img.height || img.naturalHeight || 360;
+    const maxDim = 800; // higher res for better color extraction
+    if (w > maxDim || h > maxDim) {
+      const s = maxDim / Math.max(w, h);
+      w = Math.round(w * s); h = Math.round(h * s);
+    }
+    const tc = document.createElement('canvas');
+    tc.width = w; tc.height = h;
+    const tx = tc.getContext('2d');
+    tx.drawImage(img, 0, 0, w, h);
+    const id = tx.getImageData(0, 0, w, h);
+
+    // Grid dimensions
+    const cellPxW = w / gridCols;
+    const gridRows = Math.round(h / cellPxW);
+    const cellPxH = h / gridRows;
+    const totalCells = gridCols * gridRows;
+
+    // Step 1: Compute ACTUAL average color for every cell
+    const cellColors = new Uint8Array(totalCells * 3);
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const x0 = Math.floor(c * cellPxW), y0 = Math.floor(r * cellPxH);
+        const x1 = Math.floor((c+1) * cellPxW), y1 = Math.floor((r+1) * cellPxH);
+        let sr=0, sg=0, sb=0, cnt=0;
+        for (let y = y0; y < y1 && y < h; y++) {
+          for (let x = x0; x < x1 && x < w; x++) {
+            const j = (y * w + x) * 4;
+            sr += id.data[j]; sg += id.data[j+1]; sb += id.data[j+2]; cnt++;
+          }
+        }
+        cnt = cnt || 1;
+        const idx = (r * gridCols + c) * 3;
+        cellColors[idx]   = Math.round(sr / cnt);
+        cellColors[idx+1] = Math.round(sg / cnt);
+        cellColors[idx+2] = Math.round(sb / cnt);
+      }
+    }
+
+    // Step 2: K-means on cell colors to find category centers
+    // Build a flat pixel-like buffer from cell colors for the quantizer
+    const cellData = new Uint8ClampedArray(totalCells * 4);
+    for (let i = 0; i < totalCells; i++) {
+      cellData[i*4]   = cellColors[i*3];
+      cellData[i*4+1] = cellColors[i*3+1];
+      cellData[i*4+2] = cellColors[i*3+2];
+      cellData[i*4+3] = 255;
+    }
+    const centers = this.quant.quantize(cellData, totalCells, 1, numCategories, 30);
+
+    // Step 3: Assign each cell to nearest category
+    const grid = new Uint8Array(totalCells);
+    for (let i = 0; i < totalCells; i++) {
+      const cr = cellColors[i*3], cg = cellColors[i*3+1], cb = cellColors[i*3+2];
+      let best = 0, bd = Infinity;
+      for (let p = 0; p < centers.length; p++) {
+        const dr = cr-centers[p][0], dg = cg-centers[p][1], db = cb-centers[p][2];
+        const d = 2*dr*dr + 4*dg*dg + 3*db*db;
+        if (d < bd) { bd = d; best = p; }
+      }
+      grid[i] = best;
+    }
+
+    // Step 4: Sort categories by hue then luminance
+    const palOrder = centers.map((c, i) => {
+      const [r,g,b] = c;
+      const mx = Math.max(r,g,b), mn = Math.min(r,g,b), dd = mx-mn;
+      let hue = 0;
+      if (dd > 0) {
+        if (mx === r) hue = ((g-b)/dd + 6) % 6;
+        else if (mx === g) hue = (b-r)/dd + 2;
+        else hue = (r-g)/dd + 4;
+        hue *= 60;
+      }
+      const lum = r*.299 + g*.587 + b*.114;
+      return { c, i, sortKey: Math.floor(hue/60)*1000 + lum };
+    }).sort((a,b) => a.sortKey - b.sortKey);
+
+    const remap = new Uint8Array(centers.length);
+    const palette = [];
+    for (let ni = 0; ni < palOrder.length; ni++) {
+      remap[palOrder[ni].i] = ni;
+      palette.push(palOrder[ni].c);
+    }
+    for (let i = 0; i < totalCells; i++) grid[i] = remap[grid[i]];
+
+    // Step 5: Generate category names — deduplicate
+    const rawNames = palette.map(c => nameColor(c[0], c[1], c[2]));
+    const categoryNames = [];
+    const nameCount = {};
+    for (const n of rawNames) nameCount[n] = (nameCount[n] || 0) + 1;
+    const nameUsed = {};
+    for (let i = 0; i < rawNames.length; i++) {
+      const n = rawNames[i];
+      if (nameCount[n] > 1) {
+        nameUsed[n] = (nameUsed[n] || 0) + 1;
+        categoryNames.push(`${n} ${nameUsed[n]}`);
+      } else {
+        categoryNames.push(n);
+      }
+    }
+
+    return { palette, grid, cellColors, categoryNames, cols: gridCols, rows: gridRows, totalCells };
+  }
+}
+
+// ===================== GAME STATE =====================
+class Game {
+  constructor() { this.reset(); }
+  reset() {
+    this.palette = [];
+    this.grid = null;
+    this.cellColors = null; // actual RGB per cell (Uint8Array, 3 bytes each)
+    this.categoryNames = []; // human-readable category names
+    this.filled = null;
+    this.cols = 0; this.rows = 0;
+    this.totalCells = 0;
+    this.selectedColor = 0;
+    this.showNumbers = true;
+    this.highlight = false;
+    this.showingHint = false;
+    this.hintImg = null;
+    this.zoom = 1; this.panX = 0; this.panY = 0;
+    this.hoverCol = -1; this.hoverRow = -1;
+    this.undoStack = [];
+    this.currentStroke = null;
+    this.filledCount = 0;
+  }
+  load(data, hintImg) {
+    this.palette = data.palette;
+    this.grid = data.grid;
+    this.cellColors = data.cellColors || null;
+    this.categoryNames = data.categoryNames || [];
+    this.cols = data.cols; this.rows = data.rows;
+    this.totalCells = data.totalCells;
+    this.filled = new Uint8Array(data.totalCells);
+    this.selectedColor = 0;
+    this.showNumbers = true;
+    this.highlight = false;
+    this.showingHint = false;
+    this.hintImg = hintImg;
+    this.zoom = 1; this.panX = 0; this.panY = 0;
+    this.hoverCol = -1; this.hoverRow = -1;
+    this.undoStack = [];
+    this.currentStroke = null;
+    this.filledCount = 0;
+  }
+  paintCell(col, row) {
+    if (col < 0 || col >= this.cols || row < 0 || row >= this.rows) return false;
+    const i = row * this.cols + col;
+    if (this.filled[i]) return false;
+    if (this.grid[i] !== this.selectedColor) return false;
+    this.filled[i] = 1;
+    this.filledCount++;
+    if (this.currentStroke) this.currentStroke.push(i);
+    return true;
+  }
+  startStroke() { this.currentStroke = []; }
+  endStroke() {
+    if (this.currentStroke && this.currentStroke.length > 0) {
+      this.undoStack.push(this.currentStroke);
+    }
+    this.currentStroke = null;
+  }
+  undo() {
+    if (this.undoStack.length === 0) return false;
+    const stroke = this.undoStack.pop();
+    for (const i of stroke) { this.filled[i] = 0; this.filledCount--; }
+    return true;
+  }
+  fillAllColor(ci) {
+    const stroke = [];
+    for (let i = 0; i < this.totalCells; i++) {
+      if (this.grid[i] === ci && !this.filled[i]) {
+        this.filled[i] = 1; this.filledCount++; stroke.push(i);
+      }
+    }
+    if (stroke.length) this.undoStack.push(stroke);
+    return stroke.length;
+  }
+  colorCounts() {
+    const total = new Uint16Array(this.palette.length);
+    const done = new Uint16Array(this.palette.length);
+    for (let i = 0; i < this.totalCells; i++) {
+      total[this.grid[i]]++;
+      if (this.filled[i]) done[this.grid[i]]++;
+    }
+    return { total, done };
+  }
+  progress() { return this.totalCells > 0 ? this.filledCount / this.totalCells : 0; }
+  isComplete() { return this.filledCount >= this.totalCells; }
+}
+
+// ===================== RENDERER =====================
+class Renderer {
+  constructor(canvas, game) {
+    this.cv = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.g = game;
+    this.cellPx = 28; // render size per cell
+  }
+
+  setCellPx(px) { this.cellPx = px; }
+
+  render() {
+    const g = this.g, ctx = this.ctx, cp = this.cellPx;
+    const cw = g.cols * cp, ch = g.rows * cp;
+    this.cv.width = cw; this.cv.height = ch;
+
+    // Hint mode: draw original image
+    if (g.showingHint && g.hintImg) {
+      ctx.drawImage(g.hintImg, 0, 0, cw, ch);
+      return;
+    }
+
+    // Draw cells
+    const hasCellColors = !!g.cellColors;
+    for (let r = 0; r < g.rows; r++) {
+      for (let c = 0; c < g.cols; c++) {
+        const i = r * g.cols + c;
+        const x = c * cp, y = r * cp;
+        const ci = g.grid[i];
+        const [pr,pg,pb] = g.palette[ci]; // category center color
+
+        if (g.filled[i]) {
+          // Reveal ACTUAL cell color (photo-faithful mosaic)
+          if (hasCellColors) {
+            const cr = g.cellColors[i*3], cg = g.cellColors[i*3+1], cb = g.cellColors[i*3+2];
+            ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+          } else {
+            ctx.fillStyle = `rgb(${pr},${pg},${pb})`;
+          }
+          ctx.fillRect(x, y, cp, cp);
+        } else {
+          // Unfilled cell
+          if (g.highlight && ci === g.selectedColor) {
+            ctx.fillStyle = `rgba(${pr},${pg},${pb},0.15)`;
+            ctx.fillRect(x, y, cp, cp);
+          } else {
+            ctx.fillStyle = '#f0f0f2';
+            ctx.fillRect(x, y, cp, cp);
+          }
+        }
+
+        // Hover highlight
+        if (c === g.hoverCol && r === g.hoverRow && !g.filled[i]) {
+          if (ci === g.selectedColor) {
+            ctx.fillStyle = `rgba(${pr},${pg},${pb},0.35)`;
+          } else {
+            ctx.fillStyle = 'rgba(180,180,200,0.3)';
+          }
+          ctx.fillRect(x, y, cp, cp);
+        }
+      }
+    }
+
+    // Grid lines
+    ctx.strokeStyle = '#d0d0d8';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    for (let c = 0; c <= g.cols; c++) {
+      const x = c * cp + 0.5;
+      ctx.moveTo(x, 0); ctx.lineTo(x, ch);
+    }
+    for (let r = 0; r <= g.rows; r++) {
+      const y = r * cp + 0.5;
+      ctx.moveTo(0, y); ctx.lineTo(cw, y);
+    }
+    ctx.stroke();
+
+    // Thicker borders between different colors
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let r = 0; r < g.rows; r++) {
+      for (let c = 0; c < g.cols; c++) {
+        const i = r * g.cols + c;
+        const ci = g.grid[i];
+        const x = c * cp, y = r * cp;
+        // Right neighbor
+        if (c < g.cols - 1 && g.grid[i+1] !== ci) {
+          ctx.moveTo(x + cp, y); ctx.lineTo(x + cp, y + cp);
+        }
+        // Bottom neighbor
+        if (r < g.rows - 1 && g.grid[i + g.cols] !== ci) {
+          ctx.moveTo(x, y + cp); ctx.lineTo(x + cp, y + cp);
+        }
+      }
+    }
+    ctx.stroke();
+
+    // Numbers
+    if (g.showNumbers && cp >= 10) {
+      const fs = Math.max(6, Math.min(cp * 0.5, 16));
+      ctx.font = `bold ${fs}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let r = 0; r < g.rows; r++) {
+        for (let c = 0; c < g.cols; c++) {
+          const i = r * g.cols + c;
+          if (g.filled[i]) continue;
+          const ci = g.grid[i];
+          const x = c * cp + cp/2, y = r * cp + cp/2;
+          ctx.fillStyle = '#666';
+          ctx.fillText(String(ci + 1), x, y);
+        }
+      }
+    }
+  }
+}
+
+// ===================== BUILT-IN IMAGES =====================
+const BuiltIn = {
+  _c(w,h,fn) { const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);return c; },
+  sailboat() {
+    return this._c(480,360,(x,w,h)=>{
+      x.fillStyle='#87CEEB';x.fillRect(0,0,w,h);
+      x.fillStyle='#FFD700';x.beginPath();x.arc(w*.82,h*.18,28,0,Math.PI*2);x.fill();
+      x.fillStyle='#fff';[[w*.2,h*.15,25],[w*.25,h*.12,20],[w*.3,h*.15,22],[w*.6,h*.25,18]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,Math.PI*2);x.fill();});
+      x.fillStyle='#1E90FF';x.fillRect(0,h*.6,w,h*.4);
+      x.fillStyle='#1876CC';for(let i=0;i<8;i++){x.fillRect(i*65+10,h*.68,40,3);x.fillRect(i*65+30,h*.78,35,2);}
+      x.fillStyle='#8B4513';x.beginPath();x.moveTo(w*.2,h*.62);x.lineTo(w*.8,h*.62);x.lineTo(w*.72,h*.75);x.lineTo(w*.28,h*.75);x.closePath();x.fill();
+      x.fillStyle='#5C4033';x.fillRect(w*.49,h*.15,3,h*.48);
+      x.fillStyle='#FFFFFF';x.beginPath();x.moveTo(w*.51,h*.18);x.lineTo(w*.51,h*.6);x.lineTo(w*.73,h*.6);x.closePath();x.fill();
+      x.fillStyle='#FF4444';x.beginPath();x.moveTo(w*.49,h*.22);x.lineTo(w*.49,h*.6);x.lineTo(w*.3,h*.6);x.closePath();x.fill();
+    });
+  },
+  house() {
+    return this._c(480,360,(x,w,h)=>{
+      x.fillStyle='#87CEEB';x.fillRect(0,0,w,h);
+      x.fillStyle='#4CAF50';x.fillRect(0,h*.65,w,h*.35);
+      x.fillStyle='#F5DEB3';x.fillRect(w*.2,h*.35,w*.6,h*.35);
+      x.fillStyle='#B22222';x.beginPath();x.moveTo(w*.15,h*.35);x.lineTo(w*.5,h*.1);x.lineTo(w*.85,h*.35);x.closePath();x.fill();
+      x.fillStyle='#8B4513';x.fillRect(w*.44,h*.5,w*.12,h*.2);
+      x.fillStyle='#FFD700';x.beginPath();x.arc(w*.54,h*.6,3,0,Math.PI*2);x.fill();
+      x.fillStyle='#4FC3F7';[[w*.27,h*.42,w*.1,h*.1],[w*.63,h*.42,w*.1,h*.1]].forEach(([a,b,c,d])=>{x.fillRect(a,b,c,d);});
+      x.fillStyle='#8B0000';x.fillRect(w*.65,h*.1,w*.06,h*.18);
+      x.fillStyle='#FFD700';x.beginPath();x.arc(w*.85,h*.12,22,0,Math.PI*2);x.fill();
+      x.fillStyle='#D2B48C';x.beginPath();x.moveTo(w*.42,h*.7);x.lineTo(w*.38,h);x.lineTo(w*.62,h);x.lineTo(w*.58,h*.7);x.closePath();x.fill();
+      x.fillStyle='#FF69B4';for(let i=0;i<5;i++){x.beginPath();x.arc(w*.1+i*22,h*.72,5,0,Math.PI*2);x.fill();}
+    });
+  },
+  flower() {
+    return this._c(480,360,(x,w,h)=>{
+      x.fillStyle='#E8F5E9';x.fillRect(0,0,w,h);
+      x.strokeStyle='#388E3C';x.lineWidth=8;x.beginPath();x.moveTo(w*.5,h*.5);x.lineTo(w*.5,h*.95);x.stroke();
+      x.fillStyle='#4CAF50';x.beginPath();x.ellipse(w*.38,h*.72,30,12,-.4,0,Math.PI*2);x.fill();
+      x.beginPath();x.ellipse(w*.62,h*.68,28,11,.4,0,Math.PI*2);x.fill();
+      const p=['#FF5252','#FF4081','#E040FB','#FF6E40','#FF1744','#F50057','#D500F9','#FF3D00'];
+      for(let i=0;i<8;i++){x.fillStyle=p[i];x.beginPath();const a=i*Math.PI/4;x.ellipse(w*.5+Math.cos(a)*55,h*.38+Math.sin(a)*55,35,18,a,0,Math.PI*2);x.fill();}
+      x.fillStyle='#FFC107';x.beginPath();x.arc(w*.5,h*.38,25,0,Math.PI*2);x.fill();
+      x.fillStyle='#FF8F00';x.beginPath();x.arc(w*.5,h*.38,12,0,Math.PI*2);x.fill();
+    });
+  },
+  fish() {
+    return this._c(480,360,(x,w,h)=>{
+      const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#0D47A1');g.addColorStop(1,'#1A237E');
+      x.fillStyle=g;x.fillRect(0,0,w,h);
+      x.fillStyle='rgba(255,255,255,0.15)';[[80,60,15],[150,120,10],[320,80,12],[400,200,8]].forEach(([a,b,r])=>{x.beginPath();x.arc(a,b,r,0,Math.PI*2);x.fill();});
+      x.fillStyle='#2E7D32';for(let i=0;i<4;i++){const b=60+i*120;x.beginPath();x.moveTo(b,h);x.quadraticCurveTo(b-15,h*.6,b+5,h*.4);x.quadraticCurveTo(b+20,h*.6,b+10,h);x.fill();}
+      x.fillStyle='#FF6F00';x.beginPath();x.ellipse(w*.5,h*.45,90,50,0,0,Math.PI*2);x.fill();
+      x.fillStyle='#E65100';x.beginPath();x.moveTo(w*.5+75,h*.45);x.lineTo(w*.5+130,h*.45-40);x.lineTo(w*.5+130,h*.45+40);x.closePath();x.fill();
+      x.fillStyle='#FFA000';x.beginPath();x.ellipse(w*.48,h*.45,50,45,0,0,Math.PI*2);x.fill();
+      x.fillStyle='#FFF';x.beginPath();x.arc(w*.38,h*.4,12,0,Math.PI*2);x.fill();
+      x.fillStyle='#000';x.beginPath();x.arc(w*.37,h*.4,5,0,Math.PI*2);x.fill();
+      x.fillStyle='#BF360C';x.beginPath();x.moveTo(w*.5,h*.45-45);x.lineTo(w*.45,h*.45-85);x.lineTo(w*.55,h*.45-50);x.closePath();x.fill();
+      x.fillStyle='#F9A825';x.fillRect(0,h*.9,w,h*.1);
+    });
+  },
+  butterfly() {
+    return this._c(480,360,(x,w,h)=>{
+      x.fillStyle='#E1F5FE';x.fillRect(0,0,w,h);
+      x.fillStyle='#81C784';x.fillRect(0,h*.82,w,h*.18);
+      ['#E91E63','#9C27B0','#FF9800','#F44336'].forEach((c,i)=>{x.fillStyle=c;x.beginPath();x.arc(50+i*120,h*.85,6,0,Math.PI*2);x.fill();});
+      x.fillStyle='#3E2723';x.fillRect(w*.49,h*.28,w*.02,h*.35);
+      x.fillStyle='#4E342E';x.beginPath();x.arc(w*.5,h*.27,8,0,Math.PI*2);x.fill();
+      x.fillStyle='#E91E63';x.beginPath();x.ellipse(w*.35,h*.35,60,45,-.3,0,Math.PI*2);x.fill();
+      x.beginPath();x.ellipse(w*.65,h*.35,60,45,.3,0,Math.PI*2);x.fill();
+      x.fillStyle='#F48FB1';x.beginPath();x.ellipse(w*.33,h*.33,25,18,-.3,0,Math.PI*2);x.fill();
+      x.beginPath();x.ellipse(w*.67,h*.33,25,18,.3,0,Math.PI*2);x.fill();
+      x.fillStyle='#FF5722';x.beginPath();x.ellipse(w*.38,h*.52,40,30,-.2,0,Math.PI*2);x.fill();
+      x.beginPath();x.ellipse(w*.62,h*.52,40,30,.2,0,Math.PI*2);x.fill();
+      x.fillStyle='#FFAB91';x.beginPath();x.ellipse(w*.37,h*.52,15,10,-.2,0,Math.PI*2);x.fill();
+      x.beginPath();x.ellipse(w*.63,h*.52,15,10,.2,0,Math.PI*2);x.fill();
+    });
+  },
+  landscape() {
+    return this._c(480,360,(x,w,h)=>{
+      const sg=x.createLinearGradient(0,0,0,h*.55);sg.addColorStop(0,'#1565C0');sg.addColorStop(1,'#64B5F6');
+      x.fillStyle=sg;x.fillRect(0,0,w,h*.55);
+      x.fillStyle='#FFF176';x.beginPath();x.arc(w*.75,h*.2,30,0,Math.PI*2);x.fill();
+      x.fillStyle='#5D4037';x.beginPath();x.moveTo(0,h*.55);x.lineTo(w*.15,h*.2);x.lineTo(w*.35,h*.55);x.fill();
+      x.fillStyle='#6D4C41';x.beginPath();x.moveTo(w*.2,h*.55);x.lineTo(w*.45,h*.15);x.lineTo(w*.7,h*.55);x.fill();
+      x.fillStyle='#4E342E';x.beginPath();x.moveTo(w*.55,h*.55);x.lineTo(w*.8,h*.25);x.lineTo(w,h*.55);x.fill();
+      x.fillStyle='#ECEFF1';
+      x.beginPath();x.moveTo(w*.12,h*.24);x.lineTo(w*.15,h*.2);x.lineTo(w*.18,h*.24);x.fill();
+      x.beginPath();x.moveTo(w*.42,h*.19);x.lineTo(w*.45,h*.15);x.lineTo(w*.48,h*.19);x.fill();
+      x.fillStyle='#388E3C';x.fillRect(0,h*.55,w,h*.15);
+      x.fillStyle='#2E7D32';x.fillRect(0,h*.7,w,h*.3);
+      x.fillStyle='#0288D1';x.beginPath();x.ellipse(w*.5,h*.78,w*.35,h*.1,0,0,Math.PI*2);x.fill();
+      x.fillStyle='#1B5E20';for(let i=0;i<6;i++){const t=30+i*85;x.beginPath();x.moveTo(t,h*.55);x.lineTo(t+15,h*.35);x.lineTo(t+30,h*.55);x.fill();}
+    });
+  }
+};
+
+// ===================== GALLERY DATA =====================
+const GALLERY = {
+  simple: [
+    {name:'Sailboat',gen:()=>BuiltIn.sailboat(),diff:'easy'},
+    {name:'House',gen:()=>BuiltIn.house(),diff:'easy'},
+    {name:'Flower',gen:()=>BuiltIn.flower(),diff:'easy'},
+    {name:'Tropical Fish',gen:()=>BuiltIn.fish(),diff:'easy'},
+    {name:'Butterfly',gen:()=>BuiltIn.butterfly(),diff:'easy'},
+    {name:'Mountain Lake',gen:()=>BuiltIn.landscape(),diff:'easy'},
+  ],
+  nature: [
+    {name:'Forest Path',url:'https://picsum.photos/id/10/600/450',diff:'medium'},
+    {name:'Mountain Range',url:'https://picsum.photos/id/29/600/450',diff:'hard'},
+    {name:'Waterfall',url:'https://picsum.photos/id/15/600/450',diff:'medium'},
+    {name:'Autumn Lake',url:'https://picsum.photos/id/76/600/450',diff:'hard'},
+    {name:'Flower Field',url:'https://picsum.photos/id/180/600/450',diff:'medium'},
+    {name:'Misty Mountains',url:'https://picsum.photos/id/100/600/450',diff:'hard'},
+  ],
+  scenery: [
+    {name:'Coastal Sunset',url:'https://picsum.photos/id/39/600/450',diff:'medium'},
+    {name:'Desert Road',url:'https://picsum.photos/id/50/600/450',diff:'medium'},
+    {name:'Alpine Village',url:'https://picsum.photos/id/164/600/450',diff:'hard'},
+    {name:'Beach Waves',url:'https://picsum.photos/id/54/600/450',diff:'hard'},
+    {name:'Rolling Hills',url:'https://picsum.photos/id/106/600/450',diff:'medium'},
+    {name:'Snowy Peaks',url:'https://picsum.photos/id/173/600/450',diff:'hard'},
+  ],
+  animals: [
+    {name:'Loyal Dog',url:'https://picsum.photos/id/237/600/450',diff:'medium'},
+    {name:'Wild Fox',url:'https://picsum.photos/id/582/600/450',diff:'hard'},
+    {name:'Perched Bird',url:'https://picsum.photos/id/210/600/450',diff:'medium'},
+    {name:'Cat Nap',url:'https://picsum.photos/id/40/600/450',diff:'medium'},
+  ],
+  uploads: [],
+};
+const CATS = [{id:'simple',label:'Simple'},{id:'nature',label:'Nature'},{id:'scenery',label:'Scenery'},{id:'animals',label:'Animals'},{id:'uploads',label:'My Uploads'}];
+
+// ===================== BRESENHAM LINE =====================
+function* bresenham(c0,r0,c1,r1) {
+  const dc=Math.abs(c1-c0),dr=Math.abs(r1-r0),sc=c0<c1?1:-1,sr=r0<r1?1:-1;
+  let err=dc-dr;
+  while(true) {
+    yield [c0,r0];
+    if(c0===c1&&r0===r1)break;
+    const e2=2*err;
+    if(e2>-dr){err-=dr;c0+=sc;}
+    if(e2<dc){err+=dc;r0+=sr;}
+  }
+}
+
+// ===================== APP =====================
+class App {
+  constructor() {
+    this.proc = new GridProcessor();
+    this.game = new Game();
+    this.rend = null;
+    this.cat = 'simple';
+    this.pendSrc = null;
+    this.pendName = '';
+    this.painting = false;
+    this.lastPaintCol = -1;
+    this.lastPaintRow = -1;
+    this.panning = false;
+    this.panStartX = 0; this.panStartY = 0;
+    this.panBaseX = 0; this.panBaseY = 0;
+    this.magnifying = false;
+    this.magMode = false; // toggle mode for touch
+    this.magX = 0; this.magY = 0;
+    this.difficulty = 'easy';
+    this.shownMagHint = false;
+
+    this.initGallery();
+    this.initModal();
+    this.initUpload();
+    this.initGame();
+    this.initKeys();
+  }
+
+  // ---- Gallery ----
+  initGallery() {
+    const bar = document.getElementById('cat-bar');
+    CATS.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'cat-btn' + (c.id===this.cat?' active':'');
+      b.textContent = c.label;
+      b.onclick = () => {
+        bar.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        this.cat = c.id;
+        this.renderGrid();
+      };
+      bar.appendChild(b);
+    });
+    this.renderGrid();
+  }
+
+  renderGrid() {
+    const g = document.getElementById('grid');
+    g.innerHTML = '';
+    const items = GALLERY[this.cat]||[];
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      if (item.gen) {
+        const cv = item.gen();
+        cv.style.cssText = 'width:100%;height:100%;object-fit:cover';
+        card.appendChild(cv);
+      } else if (item.dataurl) {
+        // Uploaded image — data URL
+        const img = document.createElement('img');
+        img.src = item.dataurl; img.alt = item.name;
+        card.appendChild(img);
+      } else if (item.url) {
+        const img = document.createElement('img');
+        img.crossOrigin='anonymous'; img.src=item.url; img.alt=item.name; img.loading='lazy';
+        img.onerror=()=>{img.style.display='none';card.insertAdjacentHTML('afterbegin','<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#444;font-size:.75rem">Unavailable</div>');};
+        card.appendChild(img);
+      }
+      card.insertAdjacentHTML('beforeend',`<div class="lbl">${item.name}</div><div class="badge ${item.diff||'medium'}">${item.diff||'medium'}</div>`);
+      card.onclick = () => {
+        if (item.gen) {
+          this.pendSrc = {type:'canvas',canvas:item.gen()};
+        } else if (item.dataurl) {
+          this.pendSrc = {type:'dataurl',url:item.dataurl};
+        } else {
+          this.pendSrc = {type:'url',url:item.url};
+        }
+        this.pendName = item.name;
+        document.getElementById('diff-modal').classList.add('active');
+      };
+      g.appendChild(card);
+    });
+
+    // Show upload button inside the "My Uploads" category
+    if (this.cat === 'uploads') {
+      const addCard = document.createElement('label');
+      addCard.className = 'card';
+      addCard.setAttribute('for', 'file-input');
+      addCard.style.cssText = 'display:flex;align-items:center;justify-content:center;cursor:pointer;border-style:dashed;border-color:#444;min-height:160px';
+      addCard.innerHTML = '<div style="text-align:center;color:var(--text2);padding:1rem"><div style="font-size:2.5rem;margin-bottom:8px;opacity:.5">+</div><div style="font-size:.85rem">Upload a Photo</div></div>';
+      g.appendChild(addCard);
+    }
+  }
+
+  // ---- Modal ----
+  initModal() {
+    document.querySelectorAll('.modal-opt').forEach(o => {
+      o.onclick = () => {
+        document.getElementById('diff-modal').classList.remove('active');
+        this.difficulty = o.dataset.colors >= 20 ? 'hard' : o.dataset.colors >= 12 ? 'medium' : 'easy';
+
+        this.startGame(parseInt(o.dataset.colors), parseInt(o.dataset.cols));
+      };
+    });
+    document.getElementById('diff-cancel').onclick = () => document.getElementById('diff-modal').classList.remove('active');
+  }
+
+  // ---- Upload ----
+  initUpload() {
+    const fi = document.getElementById('file-input');
+    fi.addEventListener('change', () => { if(fi.files.length)this.handleFile(fi.files[0]); fi.value=''; });
+  }
+
+  handleFile(f) {
+    if (!f.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = () => {
+      const name = f.name.replace(/\.[^.]+$/,'');
+      // Add to uploads gallery
+      GALLERY.uploads.push({ name: name, dataurl: r.result, diff: 'medium' });
+      // Switch to uploads category and refresh grid
+      this.cat = 'uploads';
+      document.getElementById('cat-bar').querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent === 'My Uploads');
+      });
+      this.renderGrid();
+    };
+    r.readAsDataURL(f);
+  }
+
+  // ---- Game Start ----
+  async startGame(numColors, gridCols) {
+    const prc = document.getElementById('processing');
+    prc.classList.add('active');
+    document.getElementById('proc-msg').textContent = 'Loading image...';
+    try {
+      const img = await this.loadImg(this.pendSrc);
+      document.getElementById('proc-msg').textContent = 'Building grid...';
+      await new Promise(r => setTimeout(r, 60));
+
+      const data = this.proc.process(img, numColors, gridCols);
+
+      // Hint image
+      const hintImg = new Image();
+      hintImg.src = img instanceof HTMLCanvasElement ? img.toDataURL() : img.src;
+
+      this.game.load(data, hintImg);
+
+      const cv = document.getElementById('cv');
+      const cellPx = gridCols <= 40 ? 22 : gridCols <= 60 ? 16 : 12;
+      this.rend = new Renderer(cv, this.game);
+      this.rend.setCellPx(cellPx);
+
+      document.getElementById('game-title').textContent = this.pendName;
+      this.show('game');
+      this.buildPalette();
+      this.updateProgress();
+      this.updateRemainBanner();
+      this.rend.render();
+      this.fitCanvas();
+      this.initCanvasEvents();
+
+      // Show magnifier hint on hard difficulty
+      if (this.difficulty === 'hard' && !this.shownMagHint) {
+        this.shownMagHint = true;
+        const hint = document.getElementById('mag-hint');
+        hint.classList.add('show');
+        setTimeout(() => hint.classList.remove('show'), 4000);
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert('Failed to process this image. Try another or upload your own.');
+    } finally {
+      prc.classList.remove('active');
+    }
+  }
+
+  loadImg(src) {
+    return new Promise((res,rej) => {
+      if (src.type==='canvas') return res(src.canvas);
+      const img = new Image();
+      // Only set crossOrigin for remote URLs — breaks data URLs and file:// protocol
+      if (src.type==='url' && src.url.startsWith('http')) {
+        img.crossOrigin='anonymous';
+      }
+      img.onload=()=>res(img);
+      img.onerror=()=>rej(new Error('Load failed'));
+      img.src=src.url;
+    });
+  }
+
+  // ---- Palette ----
+  buildPalette() {
+    const pal = document.getElementById('palette');
+    pal.innerHTML = '<div class="pal-head">Categories</div>';
+    const g = this.game;
+    const {total, done} = g.colorCounts();
+
+    for (let i = 0; i < g.palette.length; i++) {
+      if (total[i] === 0) continue;
+      const [r,gr,b] = g.palette[i];
+      const rem = total[i] - done[i];
+      const pct = total[i] > 0 ? Math.round(done[i]/total[i]*100) : 100;
+      const isDone = rem === 0;
+      const lum = r*.299+gr*.587+b*.114;
+      const tc = lum > 140 ? '#222' : '#fff';
+      const catName = g.categoryNames[i] || `Color ${i+1}`;
+
+      const el = document.createElement('div');
+      el.className = 'pal-item' + (i===g.selectedColor?' sel':'') + (isDone?' done':'');
+      el.dataset.ci = i;
+      el.innerHTML = `<div class="sw" style="background:rgb(${r},${gr},${b});color:${tc}">${i+1}</div>
+        <div class="meta"><div class="num">${catName}</div><div class="left">${isDone?'Done':rem+' cells left'}</div>
+        <div class="prog"><span style="width:${pct}%;background:rgb(${r},${gr},${b})"></span></div></div>
+        <button class="fillall" data-ci="${i}">Fill all</button>
+        <div class="chk">&#10003;</div>`;
+
+      el.onclick = (e) => {
+        if (e.target.classList.contains('fillall')) return;
+        pal.querySelectorAll('.pal-item').forEach(x=>x.classList.remove('sel'));
+        el.classList.add('sel');
+        g.selectedColor = i;
+        this.rend.render();
+        this.updateRemainBanner();
+      };
+      el.querySelector('.fillall').onclick = (e) => {
+        e.stopPropagation();
+        const n = g.fillAllColor(i);
+        if (n > 0) {
+          SFX.colorDone();
+          this.buildPalette();
+          this.updateProgress();
+          this.rend.render();
+          if (g.isComplete()) this.showComplete();
+        }
+      };
+      pal.appendChild(el);
+    }
+  }
+
+  updateProgress() {
+    const g = this.game;
+    const pct = Math.round(g.progress() * 100);
+    document.getElementById('prog-fill').style.width = pct+'%';
+    document.getElementById('prog-pct').textContent = pct+'%';
+    document.getElementById('cells-count').textContent = `${g.filledCount} / ${g.totalCells}`;
+  }
+
+  showComplete() {
+    SFX.complete();
+    // Show completed image briefly then overlay
+    this.game.filled.fill(1);
+    this.game.filledCount = this.game.totalCells;
+    this.rend.render();
+    this.updateProgress();
+    setTimeout(() => {
+      document.getElementById('done-overlay').classList.add('active');
+      Confetti.launch(document.getElementById('canvas-area'));
+    }, 600);
+  }
+
+  // ---- Canvas Events ----
+  initCanvasEvents() {
+    const cv = document.getElementById('cv');
+    const area = document.getElementById('canvas-area');
+    const g = this.game;
+
+    const getCellFromEvent = (e) => {
+      const rect = cv.getBoundingClientRect();
+      const sx = cv.width / rect.width;
+      const sy = cv.height / rect.height;
+      const px = (e.clientX - rect.left) * sx;
+      const py = (e.clientY - rect.top) * sy;
+      const cp = this.rend.cellPx;
+      return { col: Math.floor(px / cp), row: Math.floor(py / cp) };
+    };
+
+    // Mouse paint
+    cv.onmousedown = (e) => {
+      if (e.button === 2 || e.button === 1) {
+        // Right/middle = pan
+        this.panning = true;
+        this.panStartX = e.clientX; this.panStartY = e.clientY;
+        this.panBaseX = g.panX; this.panBaseY = g.panY;
+        e.preventDefault();
+        return;
+      }
+      const {col,row} = getCellFromEvent(e);
+      this.painting = true;
+      g.startStroke();
+      if (g.paintCell(col, row)) {
+        SFX.fill();
+        this.checkColorDone(g.selectedColor);
+        this.updateRemainBanner();
+      }
+      this.lastPaintCol = col; this.lastPaintRow = row;
+      this.rend.render();
+      this.updateProgress();
+    };
+
+    cv.onmousemove = (e) => {
+      // Magnifier: Shift held
+      if (e.shiftKey && !this.painting) {
+        this.renderMagnifier(e.clientX, e.clientY);
+        this.magnifying = true;
+        cv.style.cursor = 'none';
+        return;
+      } else if (this.magnifying && !e.shiftKey) {
+        this.hideMagnifier();
+        this.magnifying = false;
+      }
+
+      if (this.panning) {
+        g.panX = this.panBaseX + (e.clientX - this.panStartX);
+        g.panY = this.panBaseY + (e.clientY - this.panStartY);
+        this.applyTransform(cv);
+        return;
+      }
+      const {col,row} = getCellFromEvent(e);
+      if (this.painting) {
+        let any = false;
+        for (const [c,r] of bresenham(this.lastPaintCol, this.lastPaintRow, col, row)) {
+          if (g.paintCell(c, r)) any = true;
+        }
+        if (any) {
+          SFX.fill();
+          this.checkColorDone(g.selectedColor);
+          this.rend.render();
+          this.updateProgress();
+          this.updateRemainBanner();
+          if (g.isComplete()) { g.endStroke(); this.showComplete(); this.painting = false; return; }
+        }
+        this.lastPaintCol = col; this.lastPaintRow = row;
+      } else {
+        if (col !== g.hoverCol || row !== g.hoverRow) {
+          g.hoverCol = col; g.hoverRow = row;
+          this.rend.render();
+        }
+      }
+      // Cursor style
+      if (col >= 0 && col < g.cols && row >= 0 && row < g.rows) {
+        const i = row * g.cols + col;
+        if (!g.filled[i] && g.grid[i] === g.selectedColor) {
+          cv.style.cursor = 'pointer';
+        } else {
+          cv.style.cursor = 'crosshair';
+        }
+      }
+    };
+
+    const endPaint = () => {
+      if (this.painting) { g.endStroke(); this.painting = false; this.buildPalette(); this.updateRemainBanner(); }
+      this.panning = false;
+    };
+    cv.onmouseup = endPaint;
+    cv.onmouseleave = () => {
+      endPaint();
+      g.hoverCol = -1; g.hoverRow = -1;
+      this.hideMagnifier();
+      this.magnifying = false;
+      this.rend.render();
+    };
+
+    // ---- Touch (comprehensive) ----
+    let lastTouchDist = 0, lastTouchCenterX = 0, lastTouchCenterY = 0;
+    let longPressTimer = null, touchStartX = 0, touchStartY = 0;
+    let touchMoved = false;
+    const LONG_PRESS_MS = 400, MOVE_THRESHOLD = 8;
+
+    const touchCell = (t) => {
+      const rect = cv.getBoundingClientRect();
+      const sx = cv.width/rect.width, sy = cv.height/rect.height;
+      return {
+        col: Math.floor((t.clientX-rect.left)*sx / this.rend.cellPx),
+        row: Math.floor((t.clientY-rect.top)*sy / this.rend.cellPx)
+      };
+    };
+
+    const clearLongPress = () => { if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;} };
+
+    cv.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        touchStartX = t.clientX; touchStartY = t.clientY;
+        touchMoved = false;
+
+        // Magnifier mode: show magnifier instead of painting
+        if (this.magMode) {
+          this.renderMagnifier(t.clientX, t.clientY);
+          return;
+        }
+
+        // Start long-press timer for magnifier
+        clearLongPress();
+        longPressTimer = setTimeout(() => {
+          if (!touchMoved && !this.painting) {
+            this.renderMagnifier(t.clientX, t.clientY);
+            this.magnifying = true;
+            // Cancel any started stroke
+            if (this.painting) { g.endStroke(); this.painting = false; }
+          }
+          longPressTimer = null;
+        }, LONG_PRESS_MS);
+
+        // Start painting immediately
+        const {col,row} = touchCell(t);
+        this.painting = true;
+        g.startStroke();
+        if (g.paintCell(col,row)) {
+          SFX.fill();
+          this.checkColorDone(g.selectedColor);
+          this.updateRemainBanner();
+        }
+        this.lastPaintCol=col; this.lastPaintRow=row;
+        this.rend.render();
+        this.updateProgress();
+      }
+
+      if (e.touches.length === 2) {
+        clearLongPress();
+        // Cancel painting, switch to zoom/pan
+        if (this.painting) { g.endStroke(); this.painting = false; }
+        this.hideMagnifier(); this.magnifying = false;
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const dx = t0.clientX-t1.clientX, dy = t0.clientY-t1.clientY;
+        lastTouchDist = Math.hypot(dx, dy);
+        lastTouchCenterX = (t0.clientX+t1.clientX)/2;
+        lastTouchCenterY = (t0.clientY+t1.clientY)/2;
+      }
+    }, {passive:false});
+
+    cv.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        const dx = t.clientX-touchStartX, dy = t.clientY-touchStartY;
+        if (Math.hypot(dx,dy) > MOVE_THRESHOLD) { touchMoved = true; clearLongPress(); }
+
+        // Magnifier mode: move magnifier
+        if (this.magMode || this.magnifying) {
+          this.renderMagnifier(t.clientX, t.clientY);
+          return;
+        }
+
+        // Drag painting
+        if (this.painting) {
+          const {col,row} = touchCell(t);
+          let any = false;
+          for (const [c,r] of bresenham(this.lastPaintCol,this.lastPaintRow,col,row)) {
+            if (g.paintCell(c,r)) any=true;
+          }
+          if (any) {
+            SFX.fill();
+            this.checkColorDone(g.selectedColor);
+            this.rend.render();
+            this.updateProgress();
+            this.updateRemainBanner();
+          }
+          this.lastPaintCol=col; this.lastPaintRow=row;
+          if (g.isComplete()) { g.endStroke(); this.showComplete(); this.painting=false; }
+        }
+      }
+
+      if (e.touches.length === 2) {
+        const t0 = e.touches[0], t1 = e.touches[1];
+        const dx = t0.clientX-t1.clientX, dy = t0.clientY-t1.clientY;
+        const dist = Math.hypot(dx, dy);
+        const cx = (t0.clientX+t1.clientX)/2, cy = (t0.clientY+t1.clientY)/2;
+
+        // Pinch zoom
+        if (lastTouchDist > 0) {
+          g.zoom = Math.max(0.3, Math.min(6, g.zoom * (dist/lastTouchDist)));
+        }
+        // Two-finger pan
+        g.panX += cx - lastTouchCenterX;
+        g.panY += cy - lastTouchCenterY;
+        this.applyTransform(cv);
+
+        lastTouchDist = dist;
+        lastTouchCenterX = cx;
+        lastTouchCenterY = cy;
+      }
+    }, {passive:false});
+
+    cv.addEventListener('touchend', (e) => {
+      clearLongPress();
+      if (e.touches.length === 0) {
+        if (this.magnifying) { this.hideMagnifier(); this.magnifying = false; }
+        if (this.magMode) { this.hideMagnifier(); }
+        endPaint();
+        this.buildPalette();
+        this.updateRemainBanner();
+        lastTouchDist = 0;
+      }
+      if (e.touches.length === 1) {
+        // Went from 2 fingers to 1: don't start painting
+        lastTouchDist = 0;
+      }
+    }, {passive:false});
+
+    cv.addEventListener('touchcancel', () => {
+      clearLongPress();
+      this.hideMagnifier(); this.magnifying = false;
+      endPaint(); lastTouchDist = 0;
+    }, {passive:false});
+
+    // Zoom
+    area.onwheel = (e) => {
+      e.preventDefault();
+      const d = e.deltaY > 0 ? 0.9 : 1.1;
+      g.zoom = Math.max(0.3, Math.min(6, g.zoom * d));
+      this.applyTransform(cv);
+      document.getElementById('zoom-label').textContent = `Zoom: ${Math.round(g.zoom*100)}%`;
+    };
+
+    cv.oncontextmenu = e => e.preventDefault();
+
+    window.addEventListener('resize', () => this.fitCanvas());
+  }
+
+  applyTransform(cv) {
+    const g = this.game;
+    cv.style.transform = `translate(${g.panX}px,${g.panY}px) scale(${g.zoom})`;
+  }
+
+  fitCanvas() {
+    const cv = document.getElementById('cv');
+    const area = document.getElementById('canvas-area');
+    if (!this.game.grid) return;
+    const g = this.game, cp = this.rend.cellPx;
+    const cw = g.cols*cp, ch = g.rows*cp;
+    const maxW = area.clientWidth - 16, maxH = area.clientHeight - 16;
+    const scale = Math.min(maxW/cw, maxH/ch, 1.5);
+    cv.style.width = Math.round(cw*scale)+'px';
+    cv.style.height = Math.round(ch*scale)+'px';
+    g.zoom = 1; g.panX = 0; g.panY = 0;
+    cv.style.transform = '';
+  }
+
+  // ---- Magnifier ----
+  renderMagnifier(clientX, clientY) {
+    const cv = document.getElementById('cv');
+    const mag = document.getElementById('magnifier');
+    const magCv = document.getElementById('mag-cv');
+    const magCtx = magCv.getContext('2d');
+    const rect = cv.getBoundingClientRect();
+
+    // Position magnifier near cursor (offset so it doesn't cover what you're looking at)
+    const magSize = 200;
+    let mx = clientX + 20, my = clientY - magSize - 10;
+    if (my < 5) my = clientY + 20;
+    if (mx + magSize > window.innerWidth - 5) mx = clientX - magSize - 20;
+    mag.style.left = mx + 'px';
+    mag.style.top = my + 'px';
+
+    // Calculate source area in canvas coordinates
+    const sx = cv.width / rect.width;
+    const sy = cv.height / rect.height;
+    const canvasX = (clientX - rect.left) * sx;
+    const canvasY = (clientY - rect.top) * sy;
+
+    const zoom = 3;
+    const srcW = magCv.width / zoom;
+    const srcH = magCv.height / zoom;
+    const srcX = canvasX - srcW / 2;
+    const srcY = canvasY - srcH / 2;
+
+    magCtx.clearRect(0, 0, magCv.width, magCv.height);
+    magCtx.save();
+    magCtx.beginPath();
+    magCtx.arc(magCv.width/2, magCv.height/2, magCv.width/2, 0, Math.PI*2);
+    magCtx.clip();
+    magCtx.imageSmoothingEnabled = false;
+    magCtx.drawImage(cv, srcX, srcY, srcW, srcH, 0, 0, magCv.width, magCv.height);
+    magCtx.restore();
+
+    mag.classList.add('active');
+  }
+
+  hideMagnifier() {
+    document.getElementById('magnifier').classList.remove('active');
+  }
+
+  updateRemainBanner() {
+    const g = this.game;
+    const {total, done} = g.colorCounts();
+    const ci = g.selectedColor;
+    const rem = total[ci] - done[ci];
+    const totalRem = g.totalCells - g.filledCount;
+    const banner = document.getElementById('remain-banner');
+    if (totalRem > 0 && totalRem <= g.totalCells) {
+      const [r,gr,b] = g.palette[ci];
+      const catName = g.categoryNames[ci] || `Color ${ci+1}`;
+      banner.innerHTML = `${catName}: <span style="color:rgb(${r},${gr},${b})">${rem} cells</span> remaining &middot; Total: ${totalRem} of ${g.totalCells}`;
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  checkColorDone(ci) {
+    const {total,done} = this.game.colorCounts();
+    if (done[ci] === total[ci] && total[ci] > 0) {
+      SFX.colorDone();
+      // Auto-advance to next unfinished color
+      for (let i = 0; i < this.game.palette.length; i++) {
+        if (total[i] > 0 && done[i] < total[i]) {
+          this.game.selectedColor = i;
+          break;
+        }
+      }
+    }
+  }
+
+  // ---- Game Controls ----
+  initGame() {
+    const exitGame = () => {
+      this.show('gallery');
+      document.getElementById('done-overlay').classList.remove('active');
+      document.getElementById('remain-banner').classList.remove('show');
+      this.hideMagnifier();
+      this.magMode = false;
+      document.getElementById('btn-mag').classList.remove('active');
+      document.getElementById('cv').style.transform = '';
+      Confetti.stop();
+    };
+    document.getElementById('back-btn').onclick = exitGame;
+    document.getElementById('done-btn').onclick = exitGame;
+
+    const hintBtn = document.getElementById('btn-hint');
+    const setHint = (on) => { this.game.showingHint = on; this.rend && this.rend.render(); };
+    hintBtn.onmousedown = () => setHint(true);
+    hintBtn.onmouseup = () => setHint(false);
+    hintBtn.onmouseleave = () => { if(this.game.showingHint)setHint(false); };
+    hintBtn.ontouchstart = (e) => { e.preventDefault(); setHint(true); };
+    hintBtn.ontouchend = () => setHint(false);
+
+    document.getElementById('btn-nums').onclick = () => {
+      this.game.showNumbers = !this.game.showNumbers;
+      document.getElementById('btn-nums').classList.toggle('active', this.game.showNumbers);
+      this.rend && this.rend.render();
+    };
+
+    document.getElementById('btn-highlight').onclick = () => {
+      this.game.highlight = !this.game.highlight;
+      document.getElementById('btn-highlight').classList.toggle('active', this.game.highlight);
+      this.rend && this.rend.render();
+    };
+
+    document.getElementById('btn-undo').onclick = () => this.doUndo();
+
+    document.getElementById('btn-mag').onclick = () => {
+      this.magMode = !this.magMode;
+      document.getElementById('btn-mag').classList.toggle('active', this.magMode);
+      if (!this.magMode) this.hideMagnifier();
+    };
+  }
+
+  doUndo() {
+    if (this.game.undo()) {
+      this.buildPalette();
+      this.updateProgress();
+      this.rend.render();
+    }
+  }
+
+  // ---- Keyboard ----
+  initKeys() {
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'Shift' && this.magnifying) {
+        this.hideMagnifier();
+        this.magnifying = false;
+        document.getElementById('cv').style.cursor = 'crosshair';
+      }
+    });
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('game').classList.contains('active')) {
+        // Number keys 1-9, 0 for colors
+        if (e.key >= '1' && e.key <= '9') {
+          const ci = parseInt(e.key) - 1;
+          if (ci < this.game.palette.length) {
+            this.game.selectedColor = ci;
+            this.buildPalette();
+            this.rend.render();
+            this.updateRemainBanner();
+          }
+          return;
+        }
+        if (e.key === '0' && this.game.palette.length >= 10) {
+          this.game.selectedColor = 9;
+          this.buildPalette();
+          this.rend.render();
+          this.updateRemainBanner();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+          e.preventDefault();
+          this.doUndo();
+        }
+      }
+    });
+  }
+
+  show(id) {
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // Pause/resume background animation
+    if (id === 'gallery') { BgFx.resume(); } else { BgFx.pause(); }
+  }
+}
+
+// ---- Init ----
+window.addEventListener('DOMContentLoaded', () => { BgFx.init(); new App(); });
+</script>
+</body>
+</html>

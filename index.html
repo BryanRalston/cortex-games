@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cortex Games — Free Browser Games, No Downloads</title>
+<meta name="description" content="Play free browser games instantly. Gem Fusion, Tetris Blitz, and more — no downloads, no accounts, just play.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cortexgames.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cortex Games — Free Browser Games">
+<meta property="og:description" content="Play free browser games instantly. No downloads, no accounts, just play.">
+<meta property="og:url" content="https://cortexgames.com/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="shared/style.css">
+<style>
+  .header {
+    text-align: center;
+    padding: 3rem 1.5rem 2rem;
+  }
+  .header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p {
+    color: var(--text-muted);
+    font-size: 1.125rem;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem;
+  }
+
+  .game-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .game-card-preview {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card-preview::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, var(--bg-card));
+  }
+
+  .game-card-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .game-card-body h2 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    margin-bottom: 0.375rem;
+  }
+  .game-card-body p {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+    flex: 1;
+  }
+  .game-card-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    background: var(--border);
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    text-decoration: none;
+    min-height: 48px;
+  }
+  .play-btn:hover { background: var(--accent-hover); color: #fff; }
+  .play-btn:active { transform: scale(0.97); }
+  .play-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+  /* Game-specific preview colors */
+  .preview-gem { background: linear-gradient(135deg, #7c3aed, #ec4899, #f59e0b); }
+  .preview-tetris { background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6); }
+  .preview-brix { background: linear-gradient(135deg, #f59e0b, #ef4444, #3b82f6); }
+  .preview-color { background: linear-gradient(135deg, #ff7b54, #ffd56b, #2ecc71, #3b82f6); }
+  .preview-coming { background: var(--border); }
+
+  .coming-soon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+  .coming-soon-inner {
+    max-width: 480px;
+  }
+  .coming-soon-inner h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  .coming-soon-inner p {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  .side-promo {
+    position: fixed; right: 12px; top: 50%; transform: translateY(-50%);
+    width: 140px; padding: 0.75rem; background: rgba(15,15,30,0.92);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+    text-decoration: none; color: var(--text); text-align: center;
+    z-index: 100; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .side-promo:hover { border-color: var(--accent); box-shadow: 0 4px 24px rgba(0,229,255,0.3); }
+  .side-promo .sp-icon { font-size: 1.5rem; display: block; margin-bottom: 0.35rem; }
+  .side-promo .sp-title { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+  .side-promo .sp-desc { font-size: 0.625rem; color: var(--text-muted); line-height: 1.3; margin: 0.25rem 0 0.5rem; }
+  .side-promo .sp-cta { display: inline-block; padding: 0.3rem 0.75rem; border-radius: 100px; background: linear-gradient(135deg, var(--accent), #2979ff); color: #fff; font-size: 0.625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+  @media (max-width: 1200px) { .side-promo { display: none; } }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1.5rem 3rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    border-top: 1px solid var(--border);
+    max-width: 1000px;
+    margin: 2rem auto 0;
+  }
+  footer nav { margin-bottom: 0.75rem; }
+  footer nav a { margin: 0 0.75rem; }
+
+  @media (max-width: 640px) {
+    .header h1 { font-size: 1.875rem; }
+    .header p { font-size: 1rem; }
+    .games-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    .game-card-preview { height: 160px; }
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Cortex Games",
+  "url": "https://cortexgames.com/",
+  "description": "Free browser games — no downloads, no accounts, just play.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://cortexgames.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+</head>
+<body>
+
+<header class="header">
+  <h1>Cortex <span>Games</span></h1>
+  <p>Free browser games — no downloads, no accounts, just play.</p>
+</header>
+
+<main>
+  <div class="games-grid" role="list">
+
+    <article class="game-card" role="listitem">
+      <div class="game-card-preview preview-gem" aria-hidden="true">
+        <span>&#x1F48E;</span>
+      </div>
+      <div class="game-card-body">
+        <h2>Gem Fusion</h2>
+        <div class="game-card-tags">
+          <span class="tag">Puzzle</span>
+          <span class="tag">Match-3</span>
+          <span class="tag">Levels</span>
+        </div>
+        <p>Swap and match gems in this polished match-3 with 30 levels, special gems, combos, and endless mode.</p>
+        <a href="games/gem-fusion/index.html" class="play-btn" aria-label="Play Gem Fusion">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Play Now
+        </a>
+      </div>
+    </article>
+
+    <article class="game-card" role="listitem">
+      <div class="game-card-preview preview-tetris" aria-hidden="true">
+        <span>&#x1F9F1;</span>
+      </div>
+      <div class="game-card-body">
+        <h2>Tetris Blitz</h2>
+        <div class="game-card-tags">
+          <span class="tag">Arcade</span>
+          <span class="tag">Falling Blocks</span>
+          <span class="tag">Sprint</span>
+        </div>
+        <p>Classic falling blocks with modern controls. Sprint 40 or 100 lines, or chase your high score in endless mode.</p>
+        <a href="games/tetris-blitz/index.html" class="play-btn" aria-label="Play Tetris Blitz">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Play Now
+        </a>
+      </div>
+    </article>
+
+    <article class="game-card" role="listitem">
+      <div class="game-card-preview preview-brix" aria-hidden="true">
+        <span>&#x1F9F1;</span>
+      </div>
+      <div class="game-card-body">
+        <h2>BRIX 3D</h2>
+        <div class="game-card-tags">
+          <span class="tag">Creative</span>
+          <span class="tag">3D Builder</span>
+          <span class="tag">Sandbox</span>
+        </div>
+        <p>Build amazing 3D brick creations right in your browser. Full 3D editor with colors, tools, gallery, and export.</p>
+        <a href="games/brix3d/index.html" class="play-btn" aria-label="Play BRIX 3D">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Play Now
+        </a>
+      </div>
+    </article>
+
+    <article class="game-card" role="listitem">
+      <div class="game-card-preview preview-color" aria-hidden="true">
+        <span>&#x1F3A8;</span>
+      </div>
+      <div class="game-card-body">
+        <h2>Color By Numbers</h2>
+        <div class="game-card-tags">
+          <span class="tag">Relaxing</span>
+          <span class="tag">Coloring</span>
+          <span class="tag">Photo</span>
+        </div>
+        <p>Paint by color categories to reveal beautiful photos. Upload your own or pick from the gallery. Touchscreen ready.</p>
+        <a href="games/color-by-numbers/index.html" class="play-btn" aria-label="Play Color By Numbers">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Play Now
+        </a>
+      </div>
+    </article>
+
+  </div>
+
+  <section class="coming-soon">
+    <div class="coming-soon-inner">
+      <h2>More games coming soon</h2>
+      <p>Sudoku, Minesweeper, 2048, and more are on the way. Bookmark this page and check back.</p>
+    </div>
+  </section>
+</main>
+
+<a href="https://bryman.gumroad.com/l/pfoyf" target="_blank" rel="noopener" class="side-promo">
+  <span class="sp-icon">&#x1F4BB;</span>
+  <div class="sp-title">Claude Code Starter Kit</div>
+  <div class="sp-desc">10 templates + memory system + autonomous workflows</div>
+  <span class="sp-cta">$9 on Gumroad</span>
+</a>
+
+<footer>
+  <nav aria-label="Footer navigation">
+    <a href="#about">About</a>
+    <a href="#privacy">Privacy</a>
+  </nav>
+  <p>&copy; 2026 Cortex Games</p>
+</footer>
+
+<script src="shared/analytics.js"></script>
+<script src="shared/ads.js"></script>
+</body>
+</html>

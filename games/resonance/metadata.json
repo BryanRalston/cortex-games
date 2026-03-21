@@ -1,0 +1,7 @@
+{
+  "name": "Resonance",
+  "description": "A generative music toy. Nodes are silent. Sound exists only in the space between them.",
+  "tags": ["Music", "Generative", "Toy", "Experimental"],
+  "icon": "music",
+  "color": "#22D3EE"
+}

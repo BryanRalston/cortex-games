@@ -1,0 +1,7 @@
+{
+  "name": "Tetris Blitz",
+  "description": "Classic falling blocks with sprint and endless modes",
+  "tags": ["Arcade", "Falling Blocks"],
+  "icon": "gamepad",
+  "color": "#3b82f6"
+}

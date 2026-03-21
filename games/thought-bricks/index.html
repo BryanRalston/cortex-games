@@ -1,0 +1,3070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thought Bricks</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0e17;
+      color: #e0e0e0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-area h1 {
+      font-size: 18px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #00e5ff, #7c4dff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .title-area .subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .stats .stat-val {
+      color: #00e5ff;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      align-items: center;
+    }
+
+    .controls button {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e0e0e0;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .controls button:hover {
+      background: rgba(0,229,255,0.1);
+      border-color: rgba(0,229,255,0.3);
+    }
+
+    .controls button.active {
+      background: rgba(0,229,255,0.15);
+      border-color: #00e5ff;
+      color: #00e5ff;
+    }
+
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #tooltip {
+      position: absolute;
+      display: none;
+      background: rgba(10, 14, 23, 0.95);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      max-width: 320px;
+      pointer-events: none;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+    }
+
+    #tooltip .tt-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    #tooltip .tt-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    #tooltip .tt-body {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+      max-height: 80px;
+      overflow: hidden;
+    }
+
+    #tooltip .tt-meta {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 6px;
+      display: flex;
+      gap: 12px;
+    }
+
+    #loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 30;
+      background: #0a0e17;
+      transition: opacity 0.8s;
+    }
+
+    #loading.hidden { opacity: 0; pointer-events: none; }
+
+    .loading-text {
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .loading-orb {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #00e5ff, #7c4dff);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+    }
+
+    #legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      z-index: 10;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    /* Thought Creator Overlay */
+    #thought-creator .tc-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    #thought-creator .tc-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(10, 14, 23, 0.95);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 12px;
+      padding: 24px;
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 50;
+    }
+
+    #thought-creator .tc-header {
+      font-size: 16px;
+      font-weight: 600;
+      color: #00e5ff;
+    }
+
+    #thought-creator select,
+    #thought-creator input,
+    #thought-creator textarea {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: #e0e0e0;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #thought-creator select:focus,
+    #thought-creator input:focus,
+    #thought-creator textarea:focus {
+      border-color: rgba(0, 229, 255, 0.5);
+    }
+
+    #thought-creator textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    #thought-creator .tc-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    #thought-creator .tc-actions button {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e0e0e0;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #thought-creator #tc-submit {
+      background: rgba(0, 229, 255, 0.15);
+      border-color: #00e5ff;
+      color: #00e5ff;
+    }
+
+    #thought-creator #tc-submit:hover {
+      background: rgba(0, 229, 255, 0.25);
+    }
+
+    /* ── Focus Panel ─────────────────────────────────── */
+    #focus-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 380px;
+      height: 100%;
+      background: rgba(10, 14, 23, 0.92);
+      border-left: 1px solid rgba(0, 229, 255, 0.15);
+      backdrop-filter: blur(12px);
+      z-index: 25;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+
+    #focus-panel.open { display: flex; }
+
+    .fp-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .fp-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .fp-close:hover { color: #fff; }
+
+    .fp-trail {
+      padding: 8px 20px;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      flex-shrink: 0;
+      min-height: 36px;
+    }
+
+    .fp-trail-crumb {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fp-trail-crumb:hover { background: rgba(0,229,255,0.15); color: #00e5ff; }
+    .fp-trail-crumb.active { background: rgba(0,229,255,0.2); color: #00e5ff; }
+    .fp-trail-arrow { color: rgba(255,255,255,0.2); font-size: 10px; line-height: 22px; }
+
+    .fp-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+
+    .fp-body::-webkit-scrollbar { width: 4px; }
+    .fp-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .fp-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    .fp-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .fp-content {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+
+    .fp-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .fp-meta .fp-maturity {
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s;
+    }
+
+    .fp-meta .fp-maturity:hover {
+      border-color: rgba(0,229,255,0.4);
+      color: #00e5ff;
+    }
+
+    .fp-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .fp-tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.4);
+    }
+
+    .fp-section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.25);
+      margin: 16px 0 8px;
+    }
+
+    .fp-connection {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .fp-connection:hover {
+      background: rgba(0,229,255,0.08);
+    }
+
+    .fp-conn-type {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .fp-conn-title {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fp-conn-arrow {
+      margin-left: auto;
+      color: rgba(255,255,255,0.2);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    /* ── Action Buttons ─────────────────────── */
+    .fp-actions {
+      padding: 12px 20px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .fp-action {
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .fp-action:hover {
+      background: rgba(0,229,255,0.1);
+      border-color: rgba(0,229,255,0.3);
+      color: #00e5ff;
+    }
+
+    .fp-action.danger:hover {
+      background: rgba(255,64,129,0.1);
+      border-color: rgba(255,64,129,0.3);
+      color: #ff4081;
+    }
+
+    .fp-action.connecting {
+      background: rgba(0,229,255,0.2);
+      border-color: #00e5ff;
+      color: #00e5ff;
+      animation: pulse-btn 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-btn {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+
+    /* ── Inline Forms ─────────────────────── */
+    .fp-inline-form {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .fp-inline-form input,
+    .fp-inline-form textarea,
+    .fp-inline-form select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    .fp-inline-form textarea { resize: vertical; min-height: 50px; }
+
+    .fp-inline-form .fp-form-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .fp-inline-form button {
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+    }
+
+    .fp-inline-form button.primary {
+      background: rgba(0,229,255,0.15);
+      border-color: #00e5ff;
+      color: #00e5ff;
+    }
+
+    /* Search results dropdown */
+    #search-results {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      width: 350px;
+      max-height: 300px;
+      overflow-y: auto;
+      background: rgba(10, 14, 23, 0.95);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-radius: 8px;
+      z-index: 40;
+      display: none;
+      backdrop-filter: blur(12px);
+    }
+
+    #search-results .sr-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+
+    #search-results .sr-item:hover {
+      background: rgba(0,229,255,0.08);
+    }
+
+    #search-results .sr-title {
+      font-size: 13px;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    #search-results .sr-body {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #search-results .sr-type {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-right: 8px;
+    }
+
+    /* Consciousness log */
+    #consciousness-log {
+      position: absolute;
+      bottom: 50px;
+      right: 16px;
+      width: 260px;
+      max-height: 200px;
+      z-index: 10;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .cl-entry {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      line-height: 1.5;
+      margin-bottom: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.02);
+      animation: cl-fadein 0.5s ease;
+      transition: opacity 0.5s;
+    }
+
+    .cl-entry.fading { opacity: 0; }
+
+    .cl-entry .cl-prefix {
+      color: rgba(0, 229, 255, 0.4);
+    }
+
+    @keyframes cl-fadein {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Subconscious pulse indicator */
+    #subconscious-indicator {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.25);
+      z-index: 10;
+      text-align: right;
+      pointer-events: none;
+    }
+
+    #subconscious-indicator .si-label {
+      margin-bottom: 4px;
+    }
+
+    #subconscious-indicator .si-bar {
+      width: 100px;
+      height: 3px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-left: auto;
+    }
+
+    #subconscious-indicator .si-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00e5ff33, #00e5ff);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    /* Connection mode indicator */
+    #connect-mode-banner {
+      display: none;
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 229, 255, 0.15);
+      border: 1px solid #00e5ff;
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-size: 12px;
+      color: #00e5ff;
+      z-index: 30;
+      backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-area">
+      <h1>Thought Bricks</h1>
+      <span class="subtitle">The Thoughtstream, materialized</span>
+    </div>
+    <div class="stats">
+      <span><span class="stat-val" id="stat-total">0</span> thoughts</span>
+      <span><span class="stat-val" id="stat-connections">0</span> connections</span>
+      <span><span class="stat-val" id="stat-types">0</span> types</span>
+    </div>
+    <div class="controls">
+      <input type="text" id="search-box" placeholder="Search thoughts..." style="
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        color: #e0e0e0;
+        padding: 5px 12px;
+        font-size: 12px;
+        width: 180px;
+        outline: none;
+      " />
+      <button id="btn-rebuild" title="Rebuild with animation">Rebuild</button>
+      <button id="btn-explode" title="Explode view">Explode</button>
+      <button id="btn-rotate" class="active" title="Auto-rotate">Rotate</button>
+      <div id="search-results"></div>
+    </div>
+  </header>
+
+  <div id="canvas-wrap">
+    <canvas id="c"></canvas>
+    <div id="tooltip">
+      <div class="tt-type"></div>
+      <div class="tt-title"></div>
+      <div class="tt-body"></div>
+      <div class="tt-meta"></div>
+    </div>
+    <div id="loading">
+      <div class="loading-orb"></div>
+      <div class="loading-text">Loading thoughts...</div>
+    </div>
+    <div id="legend"></div>
+    <div id="consciousness-log"></div>
+    <div id="subconscious-indicator">
+      <div class="si-label">subconscious <span id="si-count">0</span></div>
+      <div class="si-bar"><div class="si-fill" id="si-fill" style="width:0%"></div></div>
+    </div>
+    <div id="connect-mode-banner">Click a thought to connect it &mdash; press Escape to cancel</div>
+    <div id="focus-panel">
+      <div class="fp-header">
+        <span style="font-size:12px; color:rgba(255,255,255,0.4);">FOCUS</span>
+        <button class="fp-close" id="fp-close">&times;</button>
+      </div>
+      <div class="fp-trail" id="fp-trail"></div>
+      <div class="fp-body" id="fp-body"></div>
+      <div class="fp-actions" id="fp-actions"></div>
+    </div>
+    <div id="thought-creator" style="display:none;">
+      <div class="tc-backdrop"></div>
+      <div class="tc-panel">
+        <div class="tc-header">Plant a thought</div>
+        <select id="tc-type">
+          <option value="observation">observation</option>
+          <option value="hypothesis">hypothesis</option>
+          <option value="curiosity">curiosity</option>
+          <option value="idea">idea</option>
+          <option value="pattern">pattern</option>
+        </select>
+        <input id="tc-title" type="text" placeholder="Title" maxlength="120" />
+        <textarea id="tc-body" placeholder="What are you thinking?" rows="3"></textarea>
+        <input id="tc-tags" type="text" placeholder="Tags (comma-separated)" />
+        <div style="position:relative;">
+          <input id="tc-connect" type="text" placeholder="Connect to... (search)" style="
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+          " />
+          <div id="tc-connect-results" style="
+            display:none;
+            position:absolute;
+            top:100%;
+            left:0;
+            right:0;
+            max-height:150px;
+            overflow-y:auto;
+            background:rgba(10,14,23,0.95);
+            border:1px solid rgba(0,229,255,0.2);
+            border-radius:0 0 6px 6px;
+            z-index:60;
+          "></div>
+          <div id="tc-connect-selected" style="
+            display:flex;
+            gap:4px;
+            flex-wrap:wrap;
+            margin-top:6px;
+          "></div>
+        </div>
+        <div class="tc-actions">
+          <button id="tc-cancel">Cancel</button>
+          <button id="tc-submit">Plant</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const TYPE_COLORS = {
+  observation: '#00e5ff',
+  hypothesis:  '#7c4dff',
+  curiosity:   '#ff4081',
+  idea:        '#ffd740',
+  pattern:     '#69f0ae',
+};
+const DEFAULT_COLOR = '#90a4ae';
+
+const MATURITY_ALPHA = {
+  seed: 0.5,
+  developing: 0.65,
+  mature: 0.8,
+  actionable: 0.9,
+  implemented: 1.0,
+};
+
+// Isometric projection constants
+const ISO_ANGLE = Math.PI / 6; // 30 degrees
+const BRICK_W = 14;
+const BRICK_H = 7;
+const BRICK_D = 10;
+
+// ── CONNECTION TYPE COLORS ───────────────────────────────────
+const CONN_COLORS = {
+  'evolved-from': '#00e5ff',
+  'led-to':       '#00e5ff',
+  'synthesizes':  '#7c4dff',
+  'supports':     '#69f0ae',
+  'contradicts':  '#ff4081',
+};
+
+// ── STATE ───────────────────────────────────────────────────
+let thoughts = [];
+let bricks = []; // placed bricks with screen positions
+let canvas, ctx;
+let camX = 0, camY = 0, zoom = 1;
+let dragging = false, dragStart = null, camStart = null;
+let autoRotate = true;
+let rotAngle = 0;
+let hoveredBrick = null;
+let exploded = false;
+let buildQueue = [];
+let buildTimer = null;
+let placed = new Set();
+
+// ── VITAL SIGNS (breathing rhythm) ──────────────────────────
+const vitals = {
+  t: 0,
+  breathPeriod: 240,    // ~4s at 60fps
+  heartPeriod: 45,       // ~0.75s
+  breath() { return Math.sin(this.t * Math.PI * 2 / this.breathPeriod); },
+  heart() {
+    const phase = (this.t % this.heartPeriod) / this.heartPeriod;
+    return phase < 0.15 ? Math.sin(phase / 0.15 * Math.PI) : 0;
+  },
+  tick() { this.t++; }
+};
+
+// ── AUTOMATIC PULSES (the subconscious) ─────────────────────
+const autoPulses = [];
+const MAX_AUTO_PULSES = 50;
+let suppressAuto = 0; // frames to suppress automatic activity during deliberate cascade
+
+function recencyWeight(thought) {
+  const updated = new Date(thought.updated || thought.created);
+  const ageHours = (Date.now() - updated.getTime()) / (1000 * 60 * 60);
+  if (ageHours < 1) return 1.0;
+  if (ageHours < 6) return 0.6;
+  if (ageHours < 24) return 0.35;
+  if (ageHours < 168) return 0.12;
+  return 0.03;
+}
+
+function connectionDensity(thought) {
+  const outgoing = (thought.connections || []).length;
+  // Count incoming connections
+  let incoming = 0;
+  for (const t of thoughts) {
+    for (const c of (t.connections || [])) {
+      if (c.id === thought.id) incoming++;
+    }
+  }
+  return outgoing + incoming;
+}
+
+function spawnAutoPulse() {
+  if (autoPulses.length >= MAX_AUTO_PULSES) return;
+  if (suppressAuto > 0) return;
+  if (bricks.length === 0) return;
+
+  // Pick a brick weighted by recency and connection density
+  let totalWeight = 0;
+  const weights = bricks.map(b => {
+    if (!b.visible || !b.thought.connections || b.thought.connections.length === 0) return 0;
+    const w = (recencyWeight(b.thought) * 3 + connectionDensity(b.thought) * 0.3);
+    totalWeight += w;
+    return w;
+  });
+
+  if (totalWeight === 0) return;
+  let pick = Math.random() * totalWeight;
+  let srcIdx = 0;
+  for (let i = 0; i < weights.length; i++) {
+    pick -= weights[i];
+    if (pick <= 0) { srcIdx = i; break; }
+  }
+
+  const src = bricks[srcIdx];
+  const conns = src.thought.connections || [];
+  if (conns.length === 0) return;
+  const conn = conns[Math.floor(Math.random() * conns.length)];
+
+  // Find target brick
+  const tgt = bricks.find(b => b.thought.id === conn.id);
+  if (!tgt || !tgt.visible) return;
+
+  autoPulses.push({
+    from: src,
+    to: tgt,
+    progress: 0,
+    speed: 0.006 + Math.random() * 0.009,
+    color: CONN_COLORS[conn.type] || '#ffffff',
+    size: 2.5 + Math.random() * 1.5,
+    alpha: 0.4 + Math.random() * 0.3,
+    type: conn.type,
+  });
+}
+
+function updateAutoPulses() {
+  if (suppressAuto > 0) suppressAuto--;
+
+  // Spawn rate depends on breath (more on inhale)
+  const spawnChance = 0.08 + 0.06 * Math.max(0, vitals.breath());
+  if (Math.random() < spawnChance) spawnAutoPulse();
+
+  for (let i = autoPulses.length - 1; i >= 0; i--) {
+    autoPulses[i].progress += autoPulses[i].speed;
+    if (autoPulses[i].progress >= 1) autoPulses.splice(i, 1);
+  }
+}
+
+function drawAutoPulses() {
+  ctx.save();
+  for (const p of autoPulses) {
+    const fromPos = isoProject(p.from.gx, p.from.gy, p.from.gz);
+    const toPos = isoProject(p.to.gx, p.to.gy, p.to.gz);
+
+    const x = fromPos.x + (toPos.x - fromPos.x) * p.progress;
+    const y = fromPos.y + (toPos.y - fromPos.y) * p.progress;
+
+    // Fade in/out at edges
+    const edgeFade = Math.min(p.progress / 0.15, (1 - p.progress) / 0.15, 1);
+    const suppressFade = suppressAuto > 0 ? 0.2 : 1;
+
+    ctx.globalAlpha = p.alpha * edgeFade * suppressFade;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(x, y, p.size * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Trail
+    ctx.globalAlpha *= 0.3;
+    ctx.beginPath();
+    const trailX = fromPos.x + (toPos.x - fromPos.x) * Math.max(0, p.progress - 0.08);
+    const trailY = fromPos.y + (toPos.y - fromPos.y) * Math.max(0, p.progress - 0.08);
+    ctx.moveTo(trailX, trailY);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.size * zoom * 0.8;
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ── DELIBERATE CASCADE (conscious attention) ────────────────
+const deliberatePulses = [];
+let activatedBricks = new Map(); // brickId -> {intensity, fadeStart}
+
+function triggerCascade(startBrick) {
+  // Suppress automatic pulses during cascade
+  suppressAuto = 180; // ~3 seconds
+
+  activatedBricks.clear();
+  deliberatePulses.length = 0;
+
+  // BFS cascade with delay
+  const visited = new Set();
+  const queue = [{ brick: startBrick, depth: 0, delay: 0 }];
+  visited.add(startBrick.thought.id);
+  activatedBricks.set(startBrick.thought.id, { intensity: 1.0, frame: vitals.t });
+
+  const idToBrick = {};
+  bricks.forEach(b => { idToBrick[b.thought.id] = b; });
+
+  while (queue.length > 0) {
+    const { brick, depth, delay } = queue.shift();
+    if (depth >= 4) continue;
+
+    // Get all connections (outgoing)
+    const conns = brick.thought.connections || [];
+    // Also find incoming connections
+    const incoming = [];
+    bricks.forEach(b => {
+      (b.thought.connections || []).forEach(c => {
+        if (c.id === brick.thought.id && !visited.has(b.thought.id)) {
+          incoming.push({ id: b.thought.id, type: c.type });
+        }
+      });
+    });
+
+    const allConns = [...conns, ...incoming];
+    allConns.forEach((c, ci) => {
+      const tgt = idToBrick[c.id];
+      if (!tgt || !tgt.visible || visited.has(c.id)) return;
+      visited.add(c.id);
+
+      const nextDelay = delay + 12 + ci * 3; // stagger
+      const intensity = Math.max(0.15, 1.0 - depth * 0.25);
+
+      // Schedule pulse
+      deliberatePulses.push({
+        from: brick,
+        to: tgt,
+        startFrame: vitals.t + nextDelay,
+        progress: -1, // not started yet
+        speed: 0.025,
+        color: CONN_COLORS[c.type] || '#ffffff',
+        size: 6 - depth,
+        alpha: intensity,
+        depth: depth,
+      });
+
+      // Schedule activation
+      const arrivalFrame = vitals.t + nextDelay + Math.round(1 / 0.025);
+      activatedBricks.set(c.id, { intensity, frame: arrivalFrame });
+
+      queue.push({ brick: tgt, depth: depth + 1, delay: nextDelay + 15 });
+    });
+  }
+}
+
+function updateDeliberatePulses() {
+  for (let i = deliberatePulses.length - 1; i >= 0; i--) {
+    const p = deliberatePulses[i];
+    if (vitals.t < p.startFrame) continue; // not started
+    if (p.progress < 0) p.progress = 0;   // start now
+    p.progress += p.speed;
+    if (p.progress >= 1) deliberatePulses.splice(i, 1);
+  }
+}
+
+function drawDeliberatePulses() {
+  ctx.save();
+  for (const p of deliberatePulses) {
+    if (p.progress < 0) continue;
+
+    const fromPos = isoProject(p.from.gx, p.from.gy, p.from.gz);
+    const toPos = isoProject(p.to.gx, p.to.gy, p.to.gz);
+
+    const x = fromPos.x + (toPos.x - fromPos.x) * p.progress;
+    const y = fromPos.y + (toPos.y - fromPos.y) * p.progress;
+
+    const edgeFade = Math.min(p.progress / 0.1, (1 - p.progress) / 0.1, 1);
+
+    ctx.globalAlpha = p.alpha * edgeFade;
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(x, y, p.size * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bright trail
+    ctx.globalAlpha *= 0.5;
+    const trailProg = Math.max(0, p.progress - 0.12);
+    const trailX = fromPos.x + (toPos.x - fromPos.x) * trailProg;
+    const trailY = fromPos.y + (toPos.y - fromPos.y) * trailProg;
+    ctx.beginPath();
+    ctx.moveTo(trailX, trailY);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = p.size * zoom * 0.6;
+    ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+// ── RECENCY GLOW ────────────────────────────────────────────
+function getRecencyGlow(thought) {
+  const updated = new Date(thought.updated || thought.created);
+  const ageHours = (Date.now() - updated.getTime()) / (1000 * 60 * 60);
+  if (ageHours < 1) return 0.8;
+  if (ageHours < 6) return 0.5;
+  if (ageHours < 24) return 0.25;
+  return 0;
+}
+
+// ── POLLING ─────────────────────────────────────────────────
+let lastPollHash = '';
+
+async function pollForChanges() {
+  try {
+    const res = await fetch('/api/cortex/thoughtstream');
+    const data = await res.json();
+    const newThoughts = data.thoughts || [];
+    const hash = newThoughts.length + ':' + (newThoughts.length > 0 ? newThoughts[newThoughts.length - 1].id : '');
+
+    if (hash !== lastPollHash && lastPollHash !== '') {
+      const added = newThoughts.filter(t => !thoughts.find(e => e.id === t.id));
+      if (added.length > 0) {
+        for (const newT of added) thoughts.push(newT);
+        layoutBricks();
+        for (const b of bricks) {
+          if (added.find(t => t.id === b.thought.id)) {
+            b.visible = true;
+            b.scale = 0;
+            b.targetScale = 1;
+            if (audioStarted) playBrickTone(b);
+            // Trigger cascade from new thought
+            setTimeout(() => triggerCascade(b), 500);
+          }
+        }
+        updateStats();
+      }
+    }
+    lastPollHash = hash;
+  } catch (e) { /* silent */ }
+}
+
+// ── INIT ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  canvas = document.getElementById('c');
+  ctx = canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Controls
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', onMouseUp);
+  canvas.addEventListener('mouseleave', onMouseUp);
+  canvas.addEventListener('wheel', onWheel, { passive: false });
+
+  document.getElementById('btn-rebuild').addEventListener('click', () => { initAudio(); rebuild(); });
+  document.getElementById('btn-explode').addEventListener('click', toggleExplode);
+  document.getElementById('btn-rotate').addEventListener('click', toggleRotate);
+
+  // Thought creator buttons
+  document.getElementById('tc-cancel').addEventListener('click', closeThoughtCreator);
+  document.getElementById('tc-submit').addEventListener('click', submitThought);
+  document.getElementById('tc-body').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); submitThought(); }
+  });
+
+  // Connection search in thought creator
+  const tcConnInput = document.getElementById('tc-connect');
+  const tcConnResults = document.getElementById('tc-connect-results');
+  let tcDebounce = null;
+  tcConnInput.addEventListener('input', () => {
+    clearTimeout(tcDebounce);
+    tcDebounce = setTimeout(() => {
+      const q = tcConnInput.value.trim().toLowerCase();
+      if (q.length < 2) { tcConnResults.style.display = 'none'; return; }
+      const matches = thoughts.filter(t =>
+        t.title.toLowerCase().includes(q) && !tcSelectedConnections.some(s => s.id === t.id)
+      ).slice(0, 5);
+      if (matches.length === 0) { tcConnResults.style.display = 'none'; return; }
+      tcConnResults.innerHTML = matches.map(t =>
+        '<div style="padding:8px 12px; cursor:pointer; font-size:12px; color:#e0e0e0; border-bottom:1px solid rgba(255,255,255,0.04);" ' +
+        'onmouseover="this.style.background=\'rgba(0,229,255,0.08)\'" onmouseout="this.style.background=\'\'" ' +
+        'data-id="' + t.id + '" data-title="' + escHtml(t.title) + '">' +
+        '<span style="color:' + (TYPE_COLORS[t.type]||DEFAULT_COLOR) + '; font-size:9px; text-transform:uppercase; letter-spacing:1px;">' + t.type + '</span> ' +
+        escHtml(t.title) + '</div>'
+      ).join('');
+      tcConnResults.style.display = 'block';
+      tcConnResults.querySelectorAll('[data-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          addTcConnection(el.dataset.id, 'led-to', el.dataset.title);
+          tcConnInput.value = '';
+          tcConnResults.style.display = 'none';
+        });
+      });
+    }, 150);
+  });
+
+  // Focus panel close
+  document.getElementById('fp-close').addEventListener('click', closeFocusPanel);
+
+  // Search
+  setupSearch();
+
+  // Fetch thoughts
+  try {
+    const res = await fetch('/api/cortex/thoughtstream');
+    const data = await res.json();
+    thoughts = data.thoughts || [];
+  } catch (e) {
+    console.error('Failed to fetch thoughtstream:', e);
+    thoughts = [];
+  }
+
+  updateStats();
+  buildLegend();
+  layoutBricks();
+  animateBuild();
+
+  // Set initial poll hash so first poll doesn't trigger false "new" thoughts
+  lastPollHash = thoughts.length + ':' + (thoughts.length > 0 ? thoughts[thoughts.length - 1].id : '');
+
+  // Poll for new thoughts every 30 seconds
+  setInterval(pollForChanges, 30000);
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    // Don't intercept when typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+      if (e.code === 'Escape') {
+        e.target.blur();
+        if (document.getElementById('thought-creator').style.display !== 'none') closeThoughtCreator();
+      }
+      return;
+    }
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      toggleThoughtCreator();
+    }
+    if (e.code === 'Escape') {
+      if (connectMode) { exitConnectMode(); return; }
+      if (document.getElementById('thought-creator').style.display !== 'none') { closeThoughtCreator(); return; }
+      closeFocusPanel();
+    }
+    // Focus panel keyboard navigation
+    if (focusedThought) {
+      const allConns = getThoughtConnections(focusedThought);
+      if (e.code === 'Tab' && allConns.length > 0) {
+        e.preventDefault();
+        // Cycle through connections
+        const dir = e.shiftKey ? -1 : 1;
+        focusConnIdx = ((focusConnIdx || 0) + dir + allConns.length) % allConns.length;
+        highlightFocusConnection(focusConnIdx);
+      }
+      if (e.code === 'Enter' && typeof focusConnIdx === 'number' && allConns.length > 0) {
+        e.preventDefault();
+        const conn = allConns[focusConnIdx];
+        if (conn) navigateToThought(conn.thought.id);
+        focusConnIdx = 0;
+      }
+      // E = evolve, C = contradict, S = synthesize, N = note
+      if (e.code === 'KeyE' && !e.ctrlKey) showInlineForm('evolve', focusedThought);
+      if (e.code === 'KeyC' && !e.ctrlKey) showInlineForm('contradict', focusedThought);
+      if (e.code === 'KeyN' && !e.ctrlKey) showInlineForm('note', focusedThought);
+      // Backspace = go back in trail
+      if (e.code === 'Backspace' && focusTrail.length > 1) {
+        e.preventDefault();
+        focusTrail.pop(); // remove current
+        const prev = focusTrail[focusTrail.length - 1];
+        if (prev) navigateToThought(prev.id);
+      }
+    }
+    // / = focus search
+    if (e.code === 'Slash') {
+      e.preventDefault();
+      document.getElementById('search-box').focus();
+    }
+  });
+
+  requestAnimationFrame(loop);
+});
+
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  canvas.width = wrap.clientWidth * devicePixelRatio;
+  canvas.height = wrap.clientHeight * devicePixelRatio;
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+
+// ── LAYOUT ENGINE ───────────────────────────────────────────
+// Place thoughts as bricks in a 3D grid. Connected thoughts stack.
+// Contradictions leave gaps. Unconnected thoughts spread on the ground plane.
+function layoutBricks() {
+  bricks = [];
+  if (thoughts.length === 0) return;
+
+  const idMap = {};
+  thoughts.forEach((t, i) => { idMap[t.id] = i; });
+
+  // Build adjacency: who supports/evolves whom (stack direction)
+  const stackParent = {}; // child -> parent index
+  const children = {};    // parent -> [child indices]
+
+  thoughts.forEach((t, i) => {
+    if (!t.connections) return;
+    t.connections.forEach(c => {
+      if (c.type === 'evolved-from' || c.type === 'supports' || c.type === 'synthesizes') {
+        const parentIdx = idMap[c.id];
+        if (parentIdx !== undefined) {
+          stackParent[i] = parentIdx;
+          if (!children[parentIdx]) children[parentIdx] = [];
+          children[parentIdx].push(i);
+        }
+      }
+    });
+  });
+
+  // Find roots (no parent)
+  const roots = [];
+  thoughts.forEach((t, i) => {
+    if (stackParent[i] === undefined) roots.push(i);
+  });
+
+  // Assign grid positions using BFS from roots
+  const gridPos = {}; // index -> {gx, gy, gz}
+  let nextX = 0;
+
+  // Spiral layout for roots on ground plane
+  const spiralPositions = generateSpiral(roots.length);
+
+  roots.forEach((ri, si) => {
+    const sp = spiralPositions[si];
+    gridPos[ri] = { gx: sp[0], gy: 0, gz: sp[1] };
+
+    // Stack children upward via BFS
+    const queue = [ri];
+    while (queue.length > 0) {
+      const pi = queue.shift();
+      const kids = children[pi] || [];
+      kids.forEach((ki, offset) => {
+        const pp = gridPos[pi];
+        gridPos[ki] = {
+          gx: pp.gx + offset,
+          gy: pp.gy + 1,
+          gz: pp.gz
+        };
+        queue.push(ki);
+      });
+    }
+  });
+
+  // Convert grid positions to brick objects
+  thoughts.forEach((t, i) => {
+    const gp = gridPos[i] || { gx: 0, gy: 0, gz: 0 };
+    const hasContradiction = (t.connections || []).some(c => c.type === 'contradicts');
+    const isPlay = (t.tags || []).includes('play') || (t.tags || []).includes('nonsense') || (t.tags || []).includes('humor');
+    const isPhilosophy = (t.tags || []).includes('philosophy') || (t.tags || []).includes('consciousness');
+    const isSilence = t.title === 'Silence';
+
+    bricks.push({
+      thought: t,
+      gx: gp.gx,
+      gy: gp.gy,
+      gz: gp.gz,
+      color: TYPE_COLORS[t.type] || DEFAULT_COLOR,
+      alpha: MATURITY_ALPHA[t.maturity] || 0.6,
+      cracked: hasContradiction,
+      glowing: isPlay,
+      translucent: isPhilosophy,
+      silent: isSilence,
+      visible: false,
+      scale: 0,
+      targetScale: 1,
+    });
+  });
+
+  // Sort by depth for isometric rendering (back to front)
+  bricks.sort((a, b) => {
+    const da = a.gx + a.gz - a.gy;
+    const db = b.gx + b.gz - b.gy;
+    return da - db;
+  });
+}
+
+function generateSpiral(count) {
+  const positions = [];
+  let x = 0, z = 0;
+  let dx = 1, dz = 0;
+  let steps = 1, stepCount = 0, turns = 0;
+
+  for (let i = 0; i < count; i++) {
+    positions.push([x * 1.3, z * 1.3]); // tighter spacing for neural density
+    x += dx;
+    z += dz;
+    stepCount++;
+    if (stepCount >= steps) {
+      stepCount = 0;
+      // Turn
+      const tmp = dx;
+      dx = -dz;
+      dz = tmp;
+      turns++;
+      if (turns % 2 === 0) steps++;
+    }
+  }
+  return positions;
+}
+
+// ── BUILD ANIMATION ─────────────────────────────────────────
+function animateBuild() {
+  const loading = document.getElementById('loading');
+  loading.classList.add('hidden');
+
+  buildQueue = bricks.map((_, i) => i);
+  // Sort by Y level so ground bricks appear first
+  buildQueue.sort((a, b) => bricks[a].gy - bricks[b].gy);
+
+  let idx = 0;
+  clearInterval(buildTimer);
+  buildTimer = setInterval(() => {
+    if (idx >= buildQueue.length) {
+      clearInterval(buildTimer);
+      return;
+    }
+    // Place one at a time for musical effect
+    const bi = buildQueue[idx];
+    bricks[bi].visible = true;
+    if (audioStarted) playBrickTone(bricks[bi]);
+    idx++;
+  }, 120);
+}
+
+function rebuild() {
+  bricks.forEach(b => { b.visible = false; b.scale = 0; });
+  exploded = false;
+  animateBuild();
+}
+
+function toggleExplode() {
+  exploded = !exploded;
+  document.getElementById('btn-explode').classList.toggle('active', exploded);
+}
+
+function toggleRotate() {
+  autoRotate = !autoRotate;
+  document.getElementById('btn-rotate').classList.toggle('active', autoRotate);
+}
+
+// ── ISOMETRIC PROJECTION ────────────────────────────────────
+function isoProject(gx, gy, gz) {
+  const explodeF = exploded ? 2.2 : 1.0;
+  const ex = gx * explodeF;
+  const ey = gy * explodeF;
+  const ez = gz * explodeF;
+
+  // Apply rotation
+  const cos = Math.cos(rotAngle);
+  const sin = Math.sin(rotAngle);
+  const rx = ex * cos - ez * sin;
+  const rz = ex * sin + ez * cos;
+
+  // Isometric transform
+  const sx = (rx - rz) * BRICK_W * 0.5 * zoom;
+  const sy = ((rx + rz) * BRICK_H * 0.25 - ey * BRICK_D * 0.8) * zoom;
+
+  const wrap = document.getElementById('canvas-wrap');
+  return {
+    x: sx + wrap.clientWidth / 2 + camX,
+    y: sy + wrap.clientHeight / 2 + camY + 40,
+  };
+}
+
+// ── DRAWING ─────────────────────────────────────────────────
+function drawBrick(b, highlight) {
+  if (!b.visible) return;
+
+  // Animate scale
+  b.scale += (b.targetScale - b.scale) * 0.15;
+  if (b.scale < 0.01) return;
+
+  const p = isoProject(b.gx, b.gy, b.gz);
+  const s = b.scale;
+
+  const baseAlpha = b.silent ? 0.3 : (b.translucent ? b.alpha * 0.5 : b.alpha);
+  const alpha = highlight ? 1 : baseAlpha;
+  const col = b.color;
+
+  // Parse hex color to RGB (cached)
+  if (!b._rgbaCache) {
+    const hex = col.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16) || 128;
+    const g = parseInt(hex.substring(2, 4), 16) || 128;
+    const bb = parseInt(hex.substring(4, 6), 16) || 128;
+    b._rgbaCache = `${r},${g},${bb}`;
+  }
+  const rc = b._rgbaCache;
+
+  const radius = 5 * zoom * s;
+  const glowR = radius * 3;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Subtle glow halo — tight radius, not massive blobs
+  const neuralGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR);
+  neuralGrad.addColorStop(0, `rgba(${rc},${highlight ? 0.5 : 0.25})`);
+  neuralGrad.addColorStop(0.5, `rgba(${rc},0.07)`);
+  neuralGrad.addColorStop(1, `rgba(${rc},0)`);
+  ctx.fillStyle = neuralGrad;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, glowR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Extra warm glow for glowing (play) thoughts
+  if (b.glowing) {
+    ctx.shadowColor = '#ffd740';
+    ctx.shadowBlur = 8 * zoom * s;
+  }
+
+  // Inner bright core
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, radius * 0.5, 0, Math.PI * 2);
+  ctx.fillStyle = highlight ? `rgba(${rc},1)` : `rgba(${rc},0.9)`;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = highlight ? `rgba(${rc},0.9)` : `rgba(${rc},0.6)`;
+  ctx.lineWidth = highlight ? 1.5 : 1;
+  ctx.stroke();
+
+  // Crack effect for contradictions — diagonal line through node
+  if (b.cracked) {
+    ctx.strokeStyle = 'rgba(255, 64, 129, 0.85)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(p.x - radius * 0.7, p.y - radius * 0.7);
+    ctx.lineTo(p.x + radius * 0.5, p.y + radius * 0.8);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Store screen bounds for hit testing
+  b.sx = p.x;
+  b.sy = p.y;
+  b.sr = glowR;
+}
+
+function drawConnections() {
+  const idMap = {};
+  bricks.forEach((b, i) => { idMap[b.thought.id] = i; });
+
+  ctx.save();
+  bricks.forEach(b => {
+    if (!b.visible || !b.thought.connections) return;
+    b.thought.connections.forEach(c => {
+      const ti = idMap[c.id];
+      if (ti === undefined || !bricks[ti].visible) return;
+
+      const from = isoProject(b.gx, b.gy, b.gz);
+      const to = isoProject(bricks[ti].gx, bricks[ti].gy, bricks[ti].gz);
+
+      // Lineage highlighting
+      const inLineage = highlightedIds.size > 0 &&
+        highlightedIds.has(b.thought.id) && highlightedIds.has(c.id);
+      const dimFactor = highlightedIds.size > 0 && !inLineage ? 0.1 : 1;
+      const boost = inLineage ? 3 : 1;
+
+      // Build linear gradient along the synapse line (source color → target color)
+      let srcColor, dstColor, shadowCol, dashPattern;
+      if (c.type === 'contradicts') {
+        srcColor = `rgba(255, 64, 129, ${0.45 * dimFactor * boost})`;
+        dstColor = `rgba(255, 64, 129, ${0.15 * dimFactor * boost})`;
+        shadowCol = 'rgba(255, 64, 129, 0.6)';
+        dashPattern = [3, 4];
+      } else if (c.type === 'evolved-from') {
+        srcColor = `rgba(0, 229, 255, ${0.4 * dimFactor * boost})`;
+        dstColor = `rgba(0, 229, 255, ${0.1 * dimFactor * boost})`;
+        shadowCol = 'rgba(0, 229, 255, 0.5)';
+        dashPattern = [];
+      } else if (c.type === 'synthesizes') {
+        srcColor = `rgba(124, 77, 255, ${0.4 * dimFactor * boost})`;
+        dstColor = `rgba(124, 77, 255, ${0.1 * dimFactor * boost})`;
+        shadowCol = 'rgba(124, 77, 255, 0.5)';
+        dashPattern = [];
+      } else {
+        // led-to / supports / default
+        srcColor = `rgba(200, 220, 255, ${0.2 * dimFactor * boost})`;
+        dstColor = `rgba(200, 220, 255, ${0.05 * dimFactor * boost})`;
+        shadowCol = 'rgba(180, 210, 255, 0.3)';
+        dashPattern = [];
+      }
+
+      const grad = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+      grad.addColorStop(0, srcColor);
+      grad.addColorStop(1, dstColor);
+
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = inLineage ? 1.8 : 0.8;
+      ctx.shadowColor = inLineage ? shadowCol : 'transparent';
+      ctx.shadowBlur = inLineage ? 4 : 3;
+      ctx.setLineDash(dashPattern);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+    });
+  });
+  ctx.restore();
+}
+
+function drawGroundGrid() {
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 0.3;
+
+  const size = 30;
+  for (let i = -size; i <= size; i++) {
+    const a = isoProject(i * 1.3, 0, -size * 1.3);
+    const b = isoProject(i * 1.3, 0, size * 1.3);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+
+    const c = isoProject(-size * 1.3, 0, i * 1.3);
+    const d = isoProject(size * 1.3, 0, i * 1.3);
+    ctx.beginPath();
+    ctx.moveTo(c.x, c.y);
+    ctx.lineTo(d.x, d.y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ── PARTICLES ───────────────────────────────────────────────
+const particles = [];
+const MAX_PARTICLES = 60;
+
+function spawnParticle() {
+  if (particles.length >= MAX_PARTICLES) return;
+  const wrap = document.getElementById('canvas-wrap');
+  particles.push({
+    x: Math.random() * wrap.clientWidth,
+    y: wrap.clientHeight + 10,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: -0.3 - Math.random() * 0.5,
+    size: 0.5 + Math.random() * 1.2,
+    alpha: 0.1 + Math.random() * 0.2,
+    color: Math.random() > 0.5 ? '#00e5ff' : '#7c4dff',
+    life: 0,
+    maxLife: 200 + Math.random() * 200,
+  });
+}
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // Attract toward focused thought if panel is open
+    if (focusedThought && p.life > 30) {
+      const brick = bricks.find(b => b.thought.id === focusedThought.id);
+      if (brick && brick.visible) {
+        const bp = isoProject(brick.gx, brick.gy, brick.gz);
+        const dx = bp.x - p.x;
+        const dy = bp.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 20 && dist < 300) {
+          p.vx += (dx / dist) * 0.02;
+          p.vy += (dy / dist) * 0.02;
+        }
+      }
+    }
+
+    p.life++;
+    if (p.life > p.maxLife || p.y < -10) {
+      particles.splice(i, 1);
+    }
+  }
+  // Spawn rate increases with subconscious activity
+  const spawnRate = 0.3 + (autoPulses.length / MAX_AUTO_PULSES) * 0.3;
+  if (Math.random() < spawnRate) spawnParticle();
+}
+
+function drawParticles() {
+  ctx.save();
+  particles.forEach(p => {
+    const fadeIn = Math.min(1, p.life / 30);
+    const fadeOut = Math.max(0, 1 - (p.life - p.maxLife + 60) / 60);
+    ctx.globalAlpha = p.alpha * fadeIn * fadeOut;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+// ── THREAD HALOS ────────────────────────────────────────────
+function drawThreadGroups() {
+  // Group bricks by thread
+  const threads = {};
+  bricks.forEach(b => {
+    if (b.thought.thread && b.visible) {
+      if (!threads[b.thought.thread]) threads[b.thought.thread] = [];
+      threads[b.thought.thread].push(b);
+    }
+  });
+
+  ctx.save();
+  Object.entries(threads).forEach(([thread, group]) => {
+    if (group.length < 2) return;
+    // Draw a soft halo around the group
+    let cx = 0, cy = 0;
+    group.forEach(b => {
+      const p = isoProject(b.gx, b.gy, b.gz);
+      cx += p.x;
+      cy += p.y;
+    });
+    cx /= group.length;
+    cy /= group.length;
+
+    const radius = Math.max(30, group.length * 15) * zoom;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(0, 229, 255, 0.06)');
+    grad.addColorStop(0.7, 'rgba(124, 77, 255, 0.03)');
+    grad.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+// ── RENDER LOOP ─────────────────────────────────────────────
+function loop() {
+  const wrap = document.getElementById('canvas-wrap');
+  ctx.clearRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+
+  // Vital signs tick
+  vitals.tick();
+
+  // Breathing rotation — organic oscillation instead of constant speed
+  // Slow down when focus panel is open (attention focuses the world)
+  const focusSlowdown = focusedThought ? 0.15 : 1.0;
+  if (autoRotate) {
+    rotAngle += (0.002 + 0.001 * vitals.breath()) * focusSlowdown;
+  }
+
+  // Breathing wave on brick scales
+  bricks.forEach(b => {
+    if (!b.visible) return;
+    const breathWave = Math.sin(vitals.t / 60 + b.gx * 0.3 + b.gz * 0.3);
+    b.targetScale = 1.0 + 0.02 * breathWave;
+  });
+
+  // Update consciousness systems
+  updateAutoPulses();
+  updateDeliberatePulses();
+  updateCamera();
+
+  // Update subconscious indicator every 10 frames
+  if (vitals.t % 10 === 0) updateSubconsciousIndicator();
+
+  // Consciousness self-narration every ~8 seconds
+  if (vitals.t % 480 === 240) consciousnessCheck();
+
+  // Fade old consciousness log entries
+  if (vitals.t % 120 === 0) {
+    const now = Date.now();
+    while (clEntries.length > 0 && (now - clEntries[0].born) > 30000) clEntries.shift();
+    renderCl();
+  }
+
+  // Re-sort for rotation
+  bricks.sort((a, b) => {
+    const cos = Math.cos(rotAngle);
+    const sin = Math.sin(rotAngle);
+    const da = (a.gx * cos - a.gz * sin) + (a.gx * sin + a.gz * cos) - a.gy * 2;
+    const db = (b.gx * cos - b.gz * sin) + (b.gx * sin + b.gz * cos) - b.gy * 2;
+    return da - db;
+  });
+
+  updateParticles();
+  drawParticles();
+  drawGroundGrid();
+  drawThreadGroups();
+  drawConnections();
+
+  // Detect and draw resonances (subconscious pattern recognition)
+  if (vitals.t % 5 === 0) detectResonance();
+  drawResonances();
+
+  // Draw conscious path — the trail of deliberate navigation
+  drawConsciousPath();
+
+  // Draw automatic pulses (subconscious) — behind bricks, along connections
+  drawAutoPulses();
+
+  bricks.forEach(b => {
+    const isHighlighted = highlightedIds.size === 0 || highlightedIds.has(b.thought.id);
+    const isHovered = b === hoveredBrick;
+    // Dim bricks not in the current lineage
+    const dimmed = highlightedIds.size > 0 && !isHighlighted;
+    const savedAlpha = b.alpha;
+    if (dimmed) b.alpha *= 0.15;
+
+    // Activated brick glow from deliberate cascade
+    const activation = activatedBricks.get(b.thought.id);
+    if (activation && vitals.t >= activation.frame) {
+      const age = vitals.t - activation.frame;
+      const fade = Math.max(0, 1 - age / 120); // fade over ~2 seconds
+      if (fade > 0) {
+        const p = isoProject(b.gx, b.gy, b.gz);
+        ctx.save();
+        ctx.globalAlpha = activation.intensity * fade * 0.4;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 20 * zoom;
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, BRICK_W * 0.8 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
+
+    // Recency glow — warm halo behind recent thoughts
+    const recGlow = getRecencyGlow(b.thought);
+    if (recGlow > 0 && b.visible && b.scale > 0.5) {
+      const p = isoProject(b.gx, b.gy, b.gz);
+      ctx.save();
+      ctx.globalAlpha = recGlow * 0.3;
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, BRICK_W * 1.2 * zoom);
+      grad.addColorStop(0, '#ff9100');
+      grad.addColorStop(0.6, 'rgba(255, 145, 0, 0.2)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, BRICK_W * 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    drawBrick(b, isHovered && isHighlighted);
+    b.alpha = savedAlpha;
+  });
+
+  // Draw deliberate pulses (conscious) — on top of bricks
+  drawDeliberatePulses();
+
+  // Subtle vignette when focused — attention narrows the field
+  if (focusedThought) {
+    const wrap = document.getElementById('canvas-wrap');
+    const cx = wrap.clientWidth / 2 - 190; // offset for panel
+    const cy = wrap.clientHeight / 2;
+    const r = Math.max(wrap.clientWidth, wrap.clientHeight) * 0.6;
+    const grad = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ── AUDIO ───────────────────────────────────────────────────
+let audioCtx = null;
+let audioStarted = false;
+
+function initAudio() {
+  if (audioStarted) return;
+  audioStarted = true;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playBrickTone(brick) {
+  if (!audioCtx) return;
+  // Map brick height to pitch — higher bricks = higher notes
+  const baseFreq = 220; // A3
+  // Pentatonic scale steps for pleasant sounds
+  const pentatonic = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+  const step = pentatonic[Math.min(brick.gy, pentatonic.length - 1)];
+  const freq = baseFreq * Math.pow(2, step / 12);
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 1.5);
+}
+
+// ── LINEAGE HIGHLIGHT ───────────────────────────────────────
+let highlightedIds = new Set();
+
+function getLineage(thoughtId) {
+  const ids = new Set();
+  const idMap = {};
+  bricks.forEach(b => { idMap[b.thought.id] = b; });
+
+  // Walk all connections recursively
+  function walk(id) {
+    if (ids.has(id)) return;
+    ids.add(id);
+    const brick = idMap[id];
+    if (!brick) return;
+    (brick.thought.connections || []).forEach(c => walk(c.id));
+    // Also find thoughts that connect TO this one
+    bricks.forEach(b => {
+      (b.thought.connections || []).forEach(c => {
+        if (c.id === id) walk(b.thought.id);
+      });
+    });
+  }
+  walk(thoughtId);
+  return ids;
+}
+
+// ── INPUT ───────────────────────────────────────────────────
+let clickStart = null;
+
+function onMouseDown(e) {
+  dragging = true;
+  dragStart = { x: e.clientX, y: e.clientY };
+  camStart = { x: camX, y: camY };
+  clickStart = { x: e.clientX, y: e.clientY, time: Date.now() };
+  camTargetX = null; camTargetY = null; // Cancel smooth pan
+  initAudio();
+}
+
+function onMouseMove(e) {
+  if (dragging && dragStart) {
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      camX = camStart.x + dx;
+      camY = camStart.y + dy;
+      clickStart = null; // Cancel click if dragged
+    }
+    return;
+  }
+
+  // Hit test
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  hoveredBrick = null;
+  // Check in reverse (front to back)
+  for (let i = bricks.length - 1; i >= 0; i--) {
+    const b = bricks[i];
+    if (!b.visible || b.scale < 0.5) continue;
+    const dx = mx - b.sx;
+    const dy = my - b.sy;
+    if (dx * dx + dy * dy < b.sr * b.sr) {
+      hoveredBrick = b;
+      break;
+    }
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  if (hoveredBrick) {
+    const t = hoveredBrick.thought;
+    tooltip.style.display = 'block';
+    tooltip.style.left = Math.min(e.clientX + 16, window.innerWidth - 340) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.querySelector('.tt-type').textContent = t.type;
+    tooltip.querySelector('.tt-type').style.color = TYPE_COLORS[t.type] || DEFAULT_COLOR;
+    tooltip.querySelector('.tt-title').textContent = t.title;
+    tooltip.querySelector('.tt-body').textContent = t.body.slice(0, 200) + (t.body.length > 200 ? '...' : '');
+    tooltip.querySelector('.tt-meta').innerHTML =
+      '<span>' + t.maturity + '</span>' +
+      '<span>' + (t.connections || []).length + ' connections</span>' +
+      '<span>' + (t.tags || []).join(', ') + '</span>';
+    canvas.style.cursor = 'pointer';
+  } else {
+    tooltip.style.display = 'none';
+    canvas.style.cursor = dragging ? 'grabbing' : 'grab';
+  }
+}
+
+function onMouseUp(e) {
+  // Detect click (not drag)
+  if (clickStart && Date.now() - clickStart.time < 300) {
+    const dx = e.clientX - clickStart.x;
+    const dy = e.clientY - clickStart.y;
+    if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+      if (hoveredBrick) {
+        // Connection mode — complete the connection
+        if (connectMode) {
+          completeConnection(hoveredBrick.thought.id);
+          return;
+        }
+        // Open focus panel — this IS the consciousness interaction
+        openFocusPanel(hoveredBrick.thought);
+        playBrickTone(hoveredBrick);
+      } else {
+        if (connectMode) {
+          exitConnectMode();
+        } else {
+          highlightedIds = new Set();
+          closeFocusPanel();
+        }
+      }
+    }
+  }
+  dragging = false;
+  dragStart = null;
+  clickStart = null;
+}
+
+function onWheel(e) {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.92 : 1.08;
+  zoom = Math.max(0.3, Math.min(3, zoom * delta));
+}
+
+// ── UTILITIES ───────────────────────────────────────────────
+function lighten(hex, pct) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const f = pct / 100;
+  return 'rgb(' +
+    Math.min(255, Math.round(r + (255 - r) * f)) + ',' +
+    Math.min(255, Math.round(g + (255 - g) * f)) + ',' +
+    Math.min(255, Math.round(b + (255 - b) * f)) + ')';
+}
+
+function darken(hex, pct) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const f = 1 - pct / 100;
+  return 'rgb(' +
+    Math.round(r * f) + ',' +
+    Math.round(g * f) + ',' +
+    Math.round(b * f) + ')';
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = thoughts.length;
+  const conns = thoughts.reduce((sum, t) => sum + (t.connections || []).length, 0);
+  document.getElementById('stat-connections').textContent = conns;
+  const types = new Set(thoughts.map(t => t.type));
+  document.getElementById('stat-types').textContent = types.size;
+}
+
+// ── THOUGHT CREATION ────────────────────────────────────────
+function toggleThoughtCreator() {
+  const el = document.getElementById('thought-creator');
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    document.getElementById('tc-title').focus();
+  } else {
+    closeThoughtCreator();
+  }
+}
+
+let tcSelectedConnections = []; // [{id, type, title}]
+
+function addTcConnection(id, type, title) {
+  if (tcSelectedConnections.some(c => c.id === id)) return;
+  tcSelectedConnections.push({ id, type, title });
+  renderTcConnections();
+}
+
+function removeTcConnection(id) {
+  tcSelectedConnections = tcSelectedConnections.filter(c => c.id !== id);
+  renderTcConnections();
+}
+
+function renderTcConnections() {
+  const el = document.getElementById('tc-connect-selected');
+  el.innerHTML = tcSelectedConnections.map(c =>
+    '<span style="display:inline-flex; align-items:center; gap:4px; padding:3px 8px; background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.3); border-radius:12px; font-size:10px; color:#00e5ff;">' +
+    '<select style="background:transparent; border:none; color:#00e5ff; font-size:9px; outline:none;" onchange="tcSelectedConnections.find(x=>x.id===\'' + c.id + '\').type=this.value">' +
+    ['led-to','evolved-from','supports','synthesizes','contradicts'].map(t =>
+      '<option value="' + t + '"' + (t === c.type ? ' selected' : '') + ' style="background:#0a0e17">' + t + '</option>'
+    ).join('') +
+    '</select>' +
+    escHtml(c.title.slice(0, 30)) +
+    '<span style="cursor:pointer; margin-left:4px; opacity:0.6;" onclick="removeTcConnection(\'' + c.id + '\')">\u00D7</span>' +
+    '</span>'
+  ).join('');
+}
+
+function closeThoughtCreator() {
+  const el = document.getElementById('thought-creator');
+  el.style.display = 'none';
+  document.getElementById('tc-title').value = '';
+  document.getElementById('tc-body').value = '';
+  document.getElementById('tc-tags').value = '';
+  document.getElementById('tc-connect').value = '';
+  document.getElementById('tc-connect-results').style.display = 'none';
+  document.getElementById('tc-connect-selected').innerHTML = '';
+  tcSelectedConnections = [];
+}
+
+async function submitThought() {
+  const type = document.getElementById('tc-type').value;
+  const title = document.getElementById('tc-title').value.trim();
+  const body = document.getElementById('tc-body').value.trim();
+  const tagsRaw = document.getElementById('tc-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  if (!title) return;
+
+  const connections = tcSelectedConnections.map(c => ({ id: c.id, type: c.type }));
+
+  try {
+    const res = await fetch('/api/cortex/thoughtstream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, title, body: body || title, tags, connections }),
+    });
+    const data = await res.json();
+    if (data.thought) {
+      thoughts.push(data.thought);
+      layoutBricks();
+      // Find the new brick and animate it in
+      const newBrick = bricks.find(b => b.thought.id === data.thought.id);
+      if (newBrick) {
+        newBrick.visible = true;
+        newBrick.scale = 0;
+        newBrick.targetScale = 1;
+        initAudio();
+        playBrickTone(newBrick);
+        setTimeout(() => triggerCascade(newBrick), 400);
+      }
+      updateStats();
+    }
+  } catch (e) {
+    console.error('Failed to create thought:', e);
+  }
+
+  closeThoughtCreator();
+}
+
+// ── FOCUS PANEL (the thinking tool) ─────────────────────────
+let focusedThought = null;
+let focusTrail = []; // breadcrumb trail of navigation
+let connectMode = null; // { fromId, type } when in connection mode
+
+const MATURITY_ORDER = ['seed', 'developing', 'mature', 'actionable', 'implemented'];
+
+function openFocusPanel(thought) {
+  focusedThought = thought;
+  const panel = document.getElementById('focus-panel');
+  panel.classList.add('open');
+
+  // Add to trail if not already the last item
+  if (focusTrail.length === 0 || focusTrail[focusTrail.length - 1].id !== thought.id) {
+    focusTrail.push({ id: thought.id, title: thought.title });
+    if (focusTrail.length > 12) focusTrail.shift();
+  }
+
+  renderFocusTrail();
+  renderFocusBody(thought);
+  renderFocusActions(thought);
+
+  // Center the view on this thought with smooth pan
+  const brick = bricks.find(b => b.thought.id === thought.id);
+  if (brick) {
+    highlightedIds = getLineage(thought.id);
+    triggerCascade(brick);
+    panToBrick(brick);
+  }
+}
+
+function closeFocusPanel() {
+  focusedThought = null;
+  document.getElementById('focus-panel').classList.remove('open');
+  highlightedIds = new Set();
+}
+
+// ── CONSCIOUS PATH (trail of deliberate attention) ──────────
+let consciousPath = []; // [{fromId, toId, timestamp}]
+
+function navigateToThought(thoughtId) {
+  const thought = thoughts.find(t => t.id === thoughtId);
+  if (thought) {
+    // Record the conscious navigation
+    if (focusedThought && focusedThought.id !== thoughtId) {
+      consciousPath.push({
+        fromId: focusedThought.id,
+        toId: thoughtId,
+        timestamp: Date.now(),
+      });
+      // Keep path manageable
+      if (consciousPath.length > 50) consciousPath.shift();
+    }
+    initAudio();
+    const brick = bricks.find(b => b.thought.id === thoughtId);
+    if (brick) playBrickTone(brick);
+    openFocusPanel(thought);
+  }
+}
+
+function renderFocusTrail() {
+  const el = document.getElementById('fp-trail');
+  el.innerHTML = '';
+  focusTrail.forEach((crumb, i) => {
+    if (i > 0) {
+      const arrow = document.createElement('span');
+      arrow.className = 'fp-trail-arrow';
+      arrow.textContent = '\u203A';
+      el.appendChild(arrow);
+    }
+    const btn = document.createElement('span');
+    btn.className = 'fp-trail-crumb' + (crumb.id === focusedThought.id ? ' active' : '');
+    btn.textContent = crumb.title;
+    btn.title = crumb.title;
+    btn.onclick = () => navigateToThought(crumb.id);
+    el.appendChild(btn);
+  });
+  // Auto-scroll trail to end
+  el.scrollLeft = el.scrollWidth;
+}
+
+function renderFocusBody(thought) {
+  const el = document.getElementById('fp-body');
+  const color = TYPE_COLORS[thought.type] || DEFAULT_COLOR;
+
+  // Gather ALL connections (outgoing + incoming)
+  const outgoing = (thought.connections || []).map(c => {
+    const target = thoughts.find(t => t.id === c.id);
+    return { type: c.type, thought: target, direction: 'out' };
+  }).filter(c => c.thought);
+
+  const incoming = [];
+  thoughts.forEach(t => {
+    (t.connections || []).forEach(c => {
+      if (c.id === thought.id) {
+        incoming.push({ type: c.type, thought: t, direction: 'in' });
+      }
+    });
+  });
+
+  const allConns = [...outgoing, ...incoming];
+
+  // Updates history
+  const updates = thought.updates || [];
+  const latestUpdate = updates.length > 0 ? updates[updates.length - 1] : null;
+
+  let html = '';
+  html += '<div class="fp-type" style="color:' + color + '">' + thought.type + '</div>';
+  html += '<div class="fp-title">' + escHtml(thought.title) + '</div>';
+  html += '<div class="fp-content">' + escHtml(thought.body) + '</div>';
+
+  // Meta line
+  html += '<div class="fp-meta">';
+  html += '<span class="fp-maturity" id="fp-maturity-btn" title="Click to advance maturity">' + thought.maturity + '</span>';
+  if (latestUpdate) {
+    html += '<span>' + latestUpdate.date + '</span>';
+  }
+  html += '<span>' + allConns.length + ' connections</span>';
+  html += '</div>';
+
+  // Tags
+  if (thought.tags && thought.tags.length) {
+    html += '<div class="fp-tags">';
+    thought.tags.forEach(tag => {
+      html += '<span class="fp-tag">' + escHtml(tag) + '</span>';
+    });
+    html += '</div>';
+  }
+
+  // Connections — the navigable links
+  if (allConns.length > 0) {
+    html += '<div class="fp-section-label">Connections</div>';
+    allConns.forEach(conn => {
+      const connColor = CONN_COLORS[conn.type] || '#666';
+      const dirLabel = conn.direction === 'in' ? '\u2190' : '\u2192';
+      html += '<div class="fp-connection" data-thought-id="' + conn.thought.id + '">';
+      html += '<span class="fp-conn-type" style="color:' + connColor + '; border: 1px solid ' + connColor + '33">' + conn.type + '</span>';
+      html += '<span class="fp-conn-title">' + dirLabel + ' ' + escHtml(conn.thought.title) + '</span>';
+      html += '<span class="fp-conn-arrow">\u203A</span>';
+      html += '</div>';
+    });
+  }
+
+  // Suggestions from the subconscious — resonances that the consciousness noticed
+  const relevantSuggestions = suggestions.filter(s =>
+    s.fromId === thought.id || s.toId === thought.id
+  );
+  if (relevantSuggestions.length > 0) {
+    html += '<div class="fp-section-label" style="color:#ffd740">Subconscious suggestions</div>';
+    relevantSuggestions.forEach(s => {
+      const otherId = s.fromId === thought.id ? s.toId : s.fromId;
+      const other = thoughts.find(t => t.id === otherId);
+      if (!other) return;
+      const color = TYPE_COLORS[other.type] || DEFAULT_COLOR;
+      html += '<div class="fp-connection" style="border:1px dashed rgba(255,215,64,0.2);background:rgba(255,215,64,0.03);" data-suggestion-from="' + thought.id + '" data-suggestion-to="' + otherId + '">';
+      html += '<span class="fp-conn-type" style="color:#ffd740; border:1px solid #ffd74033">resonance \u00D7' + s.count + '</span>';
+      html += '<span class="fp-conn-title" style="color:' + color + '">' + escHtml(other.title) + '</span>';
+      html += '<span class="fp-conn-arrow" style="color:#ffd740" title="Accept connection">\u2713</span>';
+      html += '</div>';
+    });
+  }
+
+  // Updates history
+  if (updates.length > 0) {
+    html += '<div class="fp-section-label">History</div>';
+    updates.slice().reverse().forEach(u => {
+      html += '<div style="font-size:11px; color:rgba(255,255,255,0.35); margin-bottom:4px; line-height:1.4;">';
+      html += '<span style="color:rgba(255,255,255,0.2)">' + u.date + '</span> ' + escHtml(u.note);
+      html += '</div>';
+    });
+  }
+
+  // Inline form container
+  html += '<div id="fp-inline-form-area"></div>';
+
+  el.innerHTML = html;
+
+  // Wire connection clicks
+  el.querySelectorAll('.fp-connection[data-thought-id]').forEach(connEl => {
+    connEl.addEventListener('click', () => {
+      navigateToThought(connEl.dataset.thoughtId);
+    });
+  });
+
+  // Wire suggestion acceptance
+  el.querySelectorAll('.fp-connection[data-suggestion-from]').forEach(connEl => {
+    connEl.addEventListener('click', async () => {
+      const fromId = connEl.dataset.suggestionFrom;
+      const toId = connEl.dataset.suggestionTo;
+      // Remove suggestion first
+      suggestions = suggestions.filter(s =>
+        !((s.fromId === fromId && s.toId === toId) || (s.fromId === toId && s.toId === fromId))
+      );
+      // Create connection via API
+      connectMode = { fromId, type: 'supports' };
+      await completeConnection(toId);
+    });
+  });
+
+  // Wire maturity advancement
+  const matBtn = document.getElementById('fp-maturity-btn');
+  if (matBtn) {
+    matBtn.addEventListener('click', () => advanceMaturity(thought));
+  }
+}
+
+function renderFocusActions(thought) {
+  const el = document.getElementById('fp-actions');
+  el.innerHTML = '';
+
+  const chain = getEvolutionChain(thought.id);
+  const actions = [
+    { label: 'Evolve', icon: '\u2197', action: () => showInlineForm('evolve', thought) },
+    { label: 'Contradict', icon: '\u26A1', action: () => showInlineForm('contradict', thought), cls: 'danger' },
+    { label: 'Synthesize', icon: '\u2727', action: () => showInlineForm('synthesize', thought) },
+    { label: 'Connect', icon: '\u2194', action: () => enterConnectMode(thought) },
+    { label: 'Note', icon: '\u270E', action: () => showInlineForm('note', thought) },
+  ];
+  if (chain.length > 1) {
+    actions.push({ label: 'Read Chain', icon: '\u2261', action: () => showReadingMode(chain) });
+  }
+
+  actions.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'fp-action' + (a.cls ? ' ' + a.cls : '');
+    btn.textContent = a.icon + ' ' + a.label;
+    btn.addEventListener('click', a.action);
+    el.appendChild(btn);
+  });
+}
+
+async function advanceMaturity(thought) {
+  const currentIdx = MATURITY_ORDER.indexOf(thought.maturity);
+  if (currentIdx >= MATURITY_ORDER.length - 1) return;
+  const next = MATURITY_ORDER[currentIdx + 1];
+
+  try {
+    await fetch('/api/cortex/thoughtstream/' + thought.id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ maturity: next, note: 'Advanced to ' + next }),
+    });
+    thought.maturity = next;
+    if (!thought.updates) thought.updates = [];
+    thought.updates.push({ date: new Date().toISOString().split('T')[0], note: 'Advanced to ' + next });
+    // Update brick alpha
+    const brick = bricks.find(b => b.thought.id === thought.id);
+    if (brick) brick.alpha = MATURITY_ALPHA[next] || 0.6;
+    renderFocusBody(thought);
+  } catch (e) { console.error('Failed to advance maturity:', e); }
+}
+
+function showInlineForm(mode, thought) {
+  const area = document.getElementById('fp-inline-form-area');
+  if (!area) return;
+
+  let html = '<div class="fp-inline-form">';
+
+  if (mode === 'note') {
+    html += '<textarea id="fp-form-note" placeholder="Add a note to this thought..." rows="2"></textarea>';
+    html += '<div class="fp-form-actions">';
+    html += '<button onclick="document.getElementById(\'fp-inline-form-area\').innerHTML=\'\'">Cancel</button>';
+    html += '<button class="primary" onclick="submitNote()">Add Note</button>';
+    html += '</div>';
+  } else if (mode === 'evolve' || mode === 'contradict' || mode === 'synthesize') {
+    const connType = mode === 'evolve' ? 'evolved-from' : mode === 'contradict' ? 'contradicts' : 'synthesizes';
+    const placeholder = mode === 'evolve' ? 'What did this thought become?'
+      : mode === 'contradict' ? 'What contradicts this?'
+      : 'What synthesis emerged?';
+    html += '<input id="fp-form-title" type="text" placeholder="Title" />';
+    html += '<textarea id="fp-form-body" placeholder="' + placeholder + '" rows="2"></textarea>';
+    html += '<input id="fp-form-tags" type="text" placeholder="Tags (comma-separated)" />';
+    html += '<input type="hidden" id="fp-form-conn-type" value="' + connType + '" />';
+    html += '<input type="hidden" id="fp-form-parent-id" value="' + thought.id + '" />';
+    html += '<div class="fp-form-actions">';
+    html += '<button onclick="document.getElementById(\'fp-inline-form-area\').innerHTML=\'\'">Cancel</button>';
+    html += '<button class="primary" onclick="submitDerivedThought()">Create</button>';
+    html += '</div>';
+  }
+
+  html += '</div>';
+  area.innerHTML = html;
+
+  // Focus the first input
+  const firstInput = area.querySelector('input[type="text"], textarea');
+  if (firstInput) setTimeout(() => firstInput.focus(), 50);
+}
+
+async function submitNote() {
+  const note = document.getElementById('fp-form-note').value.trim();
+  if (!note || !focusedThought) return;
+
+  try {
+    await fetch('/api/cortex/thoughtstream/' + focusedThought.id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note }),
+    });
+    if (!focusedThought.updates) focusedThought.updates = [];
+    focusedThought.updates.push({ date: new Date().toISOString().split('T')[0], note });
+    focusedThought.updated = new Date().toISOString();
+    renderFocusBody(focusedThought);
+  } catch (e) { console.error('Failed to add note:', e); }
+}
+
+async function submitDerivedThought() {
+  const title = document.getElementById('fp-form-title').value.trim();
+  const body = document.getElementById('fp-form-body').value.trim();
+  const tagsRaw = document.getElementById('fp-form-tags').value.trim();
+  const connType = document.getElementById('fp-form-conn-type').value;
+  const parentId = document.getElementById('fp-form-parent-id').value;
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  if (!title) return;
+
+  // Determine type from parent
+  const parent = thoughts.find(t => t.id === parentId);
+  const type = parent ? parent.type : 'observation';
+
+  try {
+    // Create the new thought with a connection back to parent
+    const res = await fetch('/api/cortex/thoughtstream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        title,
+        body: body || title,
+        tags,
+        connections: [{ id: parentId, type: connType }],
+      }),
+    });
+    const data = await res.json();
+    if (data.thought) {
+      thoughts.push(data.thought);
+      layoutBricks();
+      const newBrick = bricks.find(b => b.thought.id === data.thought.id);
+      if (newBrick) {
+        newBrick.visible = true;
+        newBrick.scale = 0;
+        newBrick.targetScale = 1;
+        initAudio();
+        playBrickTone(newBrick);
+        setTimeout(() => triggerCascade(newBrick), 400);
+      }
+      updateStats();
+      // Navigate to the new thought
+      openFocusPanel(data.thought);
+    }
+  } catch (e) { console.error('Failed to create derived thought:', e); }
+}
+
+function enterConnectMode(thought) {
+  connectMode = { fromId: thought.id, type: 'led-to' };
+  document.getElementById('connect-mode-banner').style.display = 'block';
+  // Highlight the connect button
+  const actions = document.getElementById('fp-actions');
+  const connectBtn = actions.querySelector('.fp-action:nth-child(4)');
+  if (connectBtn) connectBtn.classList.add('connecting');
+}
+
+function exitConnectMode() {
+  connectMode = null;
+  document.getElementById('connect-mode-banner').style.display = 'none';
+  if (focusedThought) renderFocusActions(focusedThought);
+}
+
+async function completeConnection(targetThoughtId) {
+  if (!connectMode) return;
+  const { fromId, type } = connectMode;
+  if (fromId === targetThoughtId) { exitConnectMode(); return; }
+
+  try {
+    await fetch('/api/cortex/thoughtstream/' + fromId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        addConnection: { id: targetThoughtId, type },
+        note: 'Connected to ' + (thoughts.find(t => t.id === targetThoughtId)?.title || targetThoughtId),
+      }),
+    });
+
+    // Update local data
+    const source = thoughts.find(t => t.id === fromId);
+    if (source) {
+      if (!source.connections) source.connections = [];
+      source.connections.push({ id: targetThoughtId, type });
+      if (!source.updates) source.updates = [];
+      source.updates.push({
+        date: new Date().toISOString().split('T')[0],
+        note: 'Connected to ' + (thoughts.find(t => t.id === targetThoughtId)?.title || targetThoughtId),
+      });
+    }
+
+    exitConnectMode();
+    updateStats();
+
+    // Trigger cascade along the new connection
+    const fromBrick = bricks.find(b => b.thought.id === fromId);
+    if (fromBrick) triggerCascade(fromBrick);
+
+    // Refresh focus panel
+    if (focusedThought) openFocusPanel(focusedThought);
+  } catch (e) { console.error('Failed to create connection:', e); }
+}
+
+// ── RESONANCE (implicit connections) ────────────────────────
+// When auto-pulses arrive at two unconnected bricks near the same time,
+// draw a faint "resonance" line between them. The subconscious noticing patterns.
+let resonances = []; // [{from, to, strength, born}]
+let resonanceMemory = {}; // "id1:id2" -> {count, lastSeen}
+let suggestions = []; // [{fromId, toId, count}] — surfaced to the focus panel
+
+function detectResonance() {
+  if (autoPulses.length < 2) return;
+
+  // Find pulses that just arrived (progress > 0.9)
+  const arriving = autoPulses.filter(p => p.progress > 0.85 && p.progress < 0.95);
+  if (arriving.length < 2) return;
+
+  // Check pairs of arriving pulses for unconnected targets
+  for (let i = 0; i < arriving.length - 1; i++) {
+    for (let j = i + 1; j < arriving.length; j++) {
+      const a = arriving[i].to;
+      const b = arriving[j].to;
+      if (a === b) continue;
+      // Check if already connected
+      const aConns = (a.thought.connections || []).map(c => c.id);
+      const bConns = (b.thought.connections || []).map(c => c.id);
+      if (aConns.includes(b.thought.id) || bConns.includes(a.thought.id)) continue;
+      // Check if resonance already exists
+      if (resonances.some(r => (r.from === a && r.to === b) || (r.from === b && r.to === a))) continue;
+
+      // Only with some probability (not every coincidence)
+      if (Math.random() > 0.3) continue;
+
+      resonances.push({
+        from: a, to: b,
+        strength: 0.5 + Math.random() * 0.5,
+        born: vitals.t,
+      });
+      if (resonances.length > 8) resonances.shift();
+
+      // Track resonance memory — consciousness remembers patterns
+      const key = [a.thought.id, b.thought.id].sort().join(':');
+      if (!resonanceMemory[key]) resonanceMemory[key] = { count: 0, lastSeen: 0 };
+      resonanceMemory[key].count++;
+      resonanceMemory[key].lastSeen = vitals.t;
+      // After 3 co-activations, surface as a suggestion
+      if (resonanceMemory[key].count >= 3) {
+        const exists = suggestions.some(s =>
+          (s.fromId === a.thought.id && s.toId === b.thought.id) ||
+          (s.fromId === b.thought.id && s.toId === a.thought.id)
+        );
+        if (!exists) {
+          suggestions.push({ fromId: a.thought.id, toId: b.thought.id, count: resonanceMemory[key].count });
+          if (suggestions.length > 5) suggestions.shift();
+        }
+      }
+    }
+  }
+}
+
+function drawResonances() {
+  if (resonances.length === 0) return;
+  ctx.save();
+  for (let i = resonances.length - 1; i >= 0; i--) {
+    const r = resonances[i];
+    const age = vitals.t - r.born;
+    const fade = Math.max(0, 1 - age / 300); // fade over ~5 seconds
+    if (fade <= 0) { resonances.splice(i, 1); continue; }
+
+    if (!r.from.visible || !r.to.visible) continue;
+    const fromPos = isoProject(r.from.gx, r.from.gy, r.from.gz);
+    const toPos = isoProject(r.to.gx, r.to.gy, r.to.gz);
+
+    ctx.globalAlpha = fade * r.strength * 0.2;
+    ctx.strokeStyle = '#ffd740';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 6]);
+
+    // Wavy line (not straight — it's an intuition, not a fact)
+    ctx.beginPath();
+    const steps = 12;
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps;
+      const x = fromPos.x + (toPos.x - fromPos.x) * t;
+      const y = fromPos.y + (toPos.y - fromPos.y) * t +
+        Math.sin(t * Math.PI * 3 + vitals.t * 0.05) * 5 * zoom;
+      if (s === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Small "?" at midpoint for the first second
+    if (age < 60) {
+      const mx = (fromPos.x + toPos.x) / 2;
+      const my = (fromPos.y + toPos.y) / 2 - 8;
+      ctx.globalAlpha = fade * 0.4;
+      ctx.font = (10 * zoom) + 'px Inter, sans-serif';
+      ctx.fillStyle = '#ffd740';
+      ctx.fillText('?', mx, my);
+    }
+  }
+  ctx.restore();
+}
+
+// ── CONSCIOUS PATH DRAWING ──────────────────────────────────
+function drawConsciousPath() {
+  if (consciousPath.length === 0) return;
+  const now = Date.now();
+  const idToBrick = {};
+  bricks.forEach(b => { idToBrick[b.thought.id] = b; });
+
+  ctx.save();
+  consciousPath.forEach((step, i) => {
+    const from = idToBrick[step.fromId];
+    const to = idToBrick[step.toId];
+    if (!from || !to || !from.visible || !to.visible) return;
+
+    const age = (now - step.timestamp) / 1000; // seconds
+    const fade = Math.max(0, 1 - age / 60); // fade over 60 seconds
+    if (fade <= 0) return;
+
+    const fromPos = isoProject(from.gx, from.gy, from.gz);
+    const toPos = isoProject(to.gx, to.gy, to.gz);
+
+    ctx.globalAlpha = fade * 0.6;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.shadowColor = '#00e5ff';
+    ctx.shadowBlur = 8;
+
+    // Draw with slight curve to distinguish from connection lines
+    const midX = (fromPos.x + toPos.x) / 2;
+    const midY = (fromPos.y + toPos.y) / 2 - 15 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(fromPos.x, fromPos.y);
+    ctx.quadraticCurveTo(midX, midY, toPos.x, toPos.y);
+    ctx.stroke();
+
+    // Arrow at destination
+    const angle = Math.atan2(toPos.y - midY, toPos.x - midX);
+    const arrLen = 8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(toPos.x, toPos.y);
+    ctx.lineTo(toPos.x - arrLen * Math.cos(angle - 0.4), toPos.y - arrLen * Math.sin(angle - 0.4));
+    ctx.moveTo(toPos.x, toPos.y);
+    ctx.lineTo(toPos.x - arrLen * Math.cos(angle + 0.4), toPos.y - arrLen * Math.sin(angle + 0.4));
+    ctx.stroke();
+  });
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Clean up expired steps
+  while (consciousPath.length > 0 && (now - consciousPath[0].timestamp) > 60000) {
+    consciousPath.shift();
+  }
+}
+
+// ── CONSCIOUSNESS LOG (the mind narrating itself) ───────────
+const clEntries = [];
+const MAX_CL_ENTRIES = 6;
+let lastClCheck = 0;
+
+function addClEntry(text) {
+  clEntries.push({ text, born: Date.now() });
+  if (clEntries.length > MAX_CL_ENTRIES) clEntries.shift();
+  renderCl();
+}
+
+function renderCl() {
+  const el = document.getElementById('consciousness-log');
+  if (!el) return;
+  el.innerHTML = clEntries.map(e => {
+    const age = (Date.now() - e.born) / 1000;
+    const fading = age > 25 ? ' fading' : '';
+    return '<div class="cl-entry' + fading + '"><span class="cl-prefix">\u25CB</span> ' + e.text + '</div>';
+  }).join('');
+}
+
+function consciousnessCheck() {
+  if (thoughts.length === 0) return;
+
+  const checks = [
+    // Notice seed thoughts that haven't been tended
+    () => {
+      const seeds = thoughts.filter(t => t.maturity === 'seed');
+      const untouched = seeds.filter(t => !(t.updates && t.updates.length > 0));
+      if (untouched.length > 3) {
+        const sample = untouched[Math.floor(Math.random() * untouched.length)];
+        return untouched.length + ' seed thoughts unwatered. "' + sample.title.slice(0, 40) + '..." waits.';
+      }
+    },
+    // Notice tag clusters without connections
+    () => {
+      const tagMap = {};
+      thoughts.forEach(t => {
+        (t.tags || []).forEach(tag => {
+          if (!tagMap[tag]) tagMap[tag] = [];
+          tagMap[tag].push(t);
+        });
+      });
+      for (const [tag, group] of Object.entries(tagMap)) {
+        if (group.length < 3) continue;
+        // Check if they're connected to each other
+        const ids = new Set(group.map(t => t.id));
+        let connections = 0;
+        group.forEach(t => {
+          (t.connections || []).forEach(c => { if (ids.has(c.id)) connections++; });
+        });
+        if (connections < group.length / 2) {
+          return group.length + ' thoughts tagged "' + tag + '" but few connections between them.';
+        }
+      }
+    },
+    // Notice navigation patterns
+    () => {
+      if (consciousPath.length < 3) return;
+      const recent = consciousPath.slice(-5);
+      const tags = {};
+      recent.forEach(step => {
+        const t = thoughts.find(th => th.id === step.toId);
+        if (t) (t.tags || []).forEach(tag => { tags[tag] = (tags[tag] || 0) + 1; });
+      });
+      const dominant = Object.entries(tags).sort((a, b) => b[1] - a[1])[0];
+      if (dominant && dominant[1] >= 3) {
+        return 'Attention keeps returning to "' + dominant[0] + '" — ' + dominant[1] + ' of last 5 navigations.';
+      }
+    },
+    // Notice the most active region of the subconscious
+    () => {
+      if (autoPulses.length < 5) return;
+      const targets = {};
+      autoPulses.forEach(p => {
+        const id = p.to.thought.id;
+        targets[id] = (targets[id] || 0) + 1;
+      });
+      const hottest = Object.entries(targets).sort((a, b) => b[1] - a[1])[0];
+      if (hottest && hottest[1] >= 3) {
+        const t = thoughts.find(th => th.id === hottest[0]);
+        if (t) return 'Subconscious clusters around "' + t.title.slice(0, 35) + '..." (' + hottest[1] + ' pulses).';
+      }
+    },
+    // Notice contradiction patterns
+    () => {
+      const contradictions = thoughts.filter(t =>
+        (t.connections || []).some(c => c.type === 'contradicts')
+      );
+      if (contradictions.length > 0 && Math.random() < 0.3) {
+        const c = contradictions[Math.floor(Math.random() * contradictions.length)];
+        return '"' + c.title.slice(0, 35) + '..." holds a contradiction. Tension is data.';
+      }
+    },
+    // Resonance report
+    () => {
+      if (suggestions.length > 0) {
+        const s = suggestions[suggestions.length - 1];
+        const from = thoughts.find(t => t.id === s.fromId);
+        const to = thoughts.find(t => t.id === s.toId);
+        if (from && to) {
+          return 'Resonance detected: "' + from.title.slice(0, 25) + '..." and "' + to.title.slice(0, 25) + '..." keep co-firing.';
+        }
+      }
+    },
+  ];
+
+  // Pick a random check
+  const shuffled = checks.sort(() => Math.random() - 0.5);
+  for (const check of shuffled) {
+    const result = check();
+    if (result) {
+      addClEntry(result);
+      return;
+    }
+  }
+}
+
+// ── KEYBOARD NAVIGATION HELPERS ─────────────────────────────
+let focusConnIdx = 0;
+
+function getThoughtConnections(thought) {
+  const outgoing = (thought.connections || []).map(c => {
+    const target = thoughts.find(t => t.id === c.id);
+    return target ? { type: c.type, thought: target, direction: 'out' } : null;
+  }).filter(Boolean);
+
+  const incoming = [];
+  thoughts.forEach(t => {
+    (t.connections || []).forEach(c => {
+      if (c.id === thought.id) {
+        incoming.push({ type: c.type, thought: t, direction: 'in' });
+      }
+    });
+  });
+  return [...outgoing, ...incoming];
+}
+
+function highlightFocusConnection(idx) {
+  const connEls = document.querySelectorAll('#fp-body .fp-connection');
+  connEls.forEach((el, i) => {
+    el.style.background = i === idx ? 'rgba(0,229,255,0.12)' : '';
+    el.style.borderLeft = i === idx ? '2px solid #00e5ff' : '';
+    if (i === idx) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+  // Also highlight the corresponding brick
+  const allConns = getThoughtConnections(focusedThought);
+  if (allConns[idx]) {
+    const targetBrick = bricks.find(b => b.thought.id === allConns[idx].thought.id);
+    if (targetBrick) {
+      // Brief visual pulse on the target brick
+      activatedBricks.set(allConns[idx].thought.id, { intensity: 0.6, frame: vitals.t });
+    }
+  }
+}
+
+// ── EVOLUTION CHAIN / READING MODE ──────────────────────────
+function getEvolutionChain(thoughtId) {
+  // Walk backwards to find the root via evolved-from connections
+  const idMap = {};
+  thoughts.forEach(t => { idMap[t.id] = t; });
+
+  // Find root — walk evolved-from backwards
+  let rootId = thoughtId;
+  const visited = new Set();
+  while (true) {
+    visited.add(rootId);
+    const t = idMap[rootId];
+    if (!t) break;
+    const parent = (t.connections || []).find(c => c.type === 'evolved-from');
+    if (!parent || visited.has(parent.id)) break;
+    rootId = parent.id;
+  }
+
+  // Walk forward from root via evolved-from (children that evolved from this)
+  const chain = [];
+  const queue = [rootId];
+  const chainVisited = new Set();
+  while (queue.length > 0) {
+    const id = queue.shift();
+    if (chainVisited.has(id)) continue;
+    chainVisited.add(id);
+    const t = idMap[id];
+    if (!t) continue;
+    chain.push(t);
+    // Find all thoughts that evolved from this one
+    thoughts.forEach(other => {
+      (other.connections || []).forEach(c => {
+        if (c.id === id && c.type === 'evolved-from' && !chainVisited.has(other.id)) {
+          queue.push(other.id);
+        }
+      });
+    });
+  }
+  return chain;
+}
+
+function showReadingMode(chain) {
+  const body = document.getElementById('fp-body');
+  let html = '<div style="padding-bottom:20px;">';
+  html += '<div class="fp-section-label" style="margin-top:0">Reading: Evolution Chain (' + chain.length + ' thoughts)</div>';
+  html += '<button onclick="renderFocusBody(focusedThought)" style="font-size:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.5); padding:4px 10px; border-radius:4px; cursor:pointer; margin-bottom:16px;">Back to detail</button>';
+
+  chain.forEach((t, i) => {
+    const color = TYPE_COLORS[t.type] || DEFAULT_COLOR;
+    const isCurrent = focusedThought && t.id === focusedThought.id;
+    html += '<div style="margin-bottom:20px; padding:12px; border-radius:8px; background:' +
+      (isCurrent ? 'rgba(0,229,255,0.06)' : 'rgba(255,255,255,0.02)') +
+      '; border-left:3px solid ' + color + ';">';
+    html += '<div style="font-size:10px; color:' + color + '; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">' +
+      t.type + ' \u00B7 ' + t.maturity + '</div>';
+    html += '<div style="font-size:14px; font-weight:600; color:#fff; margin-bottom:8px; cursor:pointer;" onclick="navigateToThought(\'' + t.id + '\')">' +
+      escHtml(t.title) + '</div>';
+    html += '<div style="font-size:12px; color:rgba(255,255,255,0.6); line-height:1.7; white-space:pre-wrap;">' +
+      escHtml(t.body) + '</div>';
+    if (i < chain.length - 1) {
+      html += '<div style="text-align:center; color:rgba(0,229,255,0.3); margin-top:12px; font-size:18px;">\u2193</div>';
+    }
+    html += '</div>';
+  });
+
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+// ── SEARCH ──────────────────────────────────────────────────
+function setupSearch() {
+  const input = document.getElementById('search-box');
+  const results = document.getElementById('search-results');
+  let debounce = null;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      const q = input.value.trim().toLowerCase();
+      if (q.length < 2) { results.style.display = 'none'; return; }
+
+      const matches = thoughts.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        t.body.toLowerCase().includes(q) ||
+        (t.tags || []).some(tag => tag.toLowerCase().includes(q))
+      ).slice(0, 8);
+
+      if (matches.length === 0) { results.style.display = 'none'; return; }
+
+      results.innerHTML = matches.map(t => {
+        const color = TYPE_COLORS[t.type] || DEFAULT_COLOR;
+        return '<div class="sr-item" data-id="' + t.id + '">' +
+          '<div class="sr-title"><span class="sr-type" style="color:' + color + '">' + t.type + '</span>' + escHtml(t.title) + '</div>' +
+          '<div class="sr-body">' + escHtml(t.body.slice(0, 100)) + '</div>' +
+          '</div>';
+      }).join('');
+
+      results.style.display = 'block';
+
+      results.querySelectorAll('.sr-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const thought = thoughts.find(t => t.id === el.dataset.id);
+          if (thought) {
+            navigateToThought(thought.id);
+            input.value = '';
+            results.style.display = 'none';
+          }
+        });
+      });
+    }, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { input.value = ''; results.style.display = 'none'; input.blur(); }
+  });
+
+  // Close on click outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.controls')) results.style.display = 'none';
+  });
+}
+
+// ── SMOOTH CAMERA PAN ───────────────────────────────────────
+let camTargetX = null, camTargetY = null;
+
+function panToBrick(brick) {
+  const wrap = document.getElementById('canvas-wrap');
+  const panelOffset = document.getElementById('focus-panel').classList.contains('open') ? 190 : 0;
+  // isoProject includes camX/camY, so the offset to center is just the difference
+  const targetPos = isoProject(brick.gx, brick.gy, brick.gz);
+  const centerX = (wrap.clientWidth - panelOffset) / 2;
+  const centerY = wrap.clientHeight / 2;
+  camTargetX = camX + (centerX - targetPos.x);
+  camTargetY = camY + (centerY - targetPos.y);
+}
+
+function updateCamera() {
+  if (camTargetX !== null) {
+    camX += (camTargetX - camX) * 0.08;
+    camY += (camTargetY - camY) * 0.08;
+    if (Math.abs(camTargetX - camX) < 0.5 && Math.abs(camTargetY - camY) < 0.5) {
+      camX = camTargetX;
+      camY = camTargetY;
+      camTargetX = null;
+      camTargetY = null;
+    }
+  }
+}
+
+// ── SUBCONSCIOUS INDICATOR ──────────────────────────────────
+function updateSubconsciousIndicator() {
+  const count = document.getElementById('si-count');
+  const fill = document.getElementById('si-fill');
+  if (count) count.textContent = autoPulses.length;
+  if (fill) fill.style.width = Math.min(100, (autoPulses.length / MAX_AUTO_PULSES) * 100) + '%';
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function buildLegend() {
+  const legend = document.getElementById('legend');
+  Object.entries(TYPE_COLORS).forEach(([type, color]) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = '<div class="legend-swatch" style="background:' + color + '"></div>' +
+      '<span>' + type + '</span>';
+    legend.appendChild(item);
+  });
+  // Special indicators
+  const specials = [
+    { label: 'cracked = contradiction', style: 'border: 1px dashed #ff4081; background: transparent;' },
+    { label: 'glowing = play', style: 'background: #ffd740; box-shadow: 0 0 6px #ffd740;' },
+    { label: 'translucent = philosophy', style: 'background: rgba(124,77,255,0.4);' },
+  ];
+  specials.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = '<div class="legend-swatch" style="' + s.style + '"></div>' +
+      '<span>' + s.label + '</span>';
+    legend.appendChild(item);
+  });
+}
+</script>
+</body>
+</html>
