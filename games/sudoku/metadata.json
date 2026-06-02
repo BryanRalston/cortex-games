@@ -1,0 +1,7 @@
+{
+  "name": "Sudoku",
+  "description": "Classic 9x9 logic puzzle. 4 difficulties, pencil marks, hints, undo, timer & best times. Neural dark theme with cyan accents.",
+  "tags": ["Puzzle", "Logic", "Brain"],
+  "icon": "grid",
+  "color": "#22D3EE"
+}

@@ -131,6 +131,7 @@
   .preview-brix { background: linear-gradient(135deg, #f59e0b, #ef4444, #3b82f6); }
   .preview-color { background: linear-gradient(135deg, #ff7b54, #ffd56b, #2ecc71, #3b82f6); }
   .preview-coming { background: var(--border); }
+  .preview-sudoku { background: linear-gradient(135deg, #0a001f, #2e1065, #6b46c1); box-shadow: inset 0 0 60px rgba(192,38,255,0.25); }
 
   .coming-soon {
     display: flex;
@@ -286,12 +287,31 @@
       </div>
     </article>
 
+    <article class="game-card" role="listitem">
+      <div class="game-card-preview preview-sudoku" aria-hidden="true">
+        <span style="font-size:3.1rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4));">🔢</span>
+      </div>
+      <div class="game-card-body">
+        <h2>Cosmic Sudoku</h2>
+        <div class="game-card-tags">
+          <span class="tag">Puzzle</span>
+          <span class="tag">Logic</span>
+          <span class="tag">Cosmic</span>
+        </div>
+        <p>9×9 logic among the stars. 4 difficulties, pencil, hints, undo, timer, best times. Deep space nebulae + celestial glows.</p>
+        <a href="games/sudoku/index.html" class="play-btn" aria-label="Play Cosmic Sudoku">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          Play Now
+        </a>
+      </div>
+    </article>
+
   </div>
 
   <section class="coming-soon">
     <div class="coming-soon-inner">
       <h2>More games coming soon</h2>
-      <p>Sudoku, Minesweeper, 2048, and more are on the way. Bookmark this page and check back.</p>
+      <p>Minesweeper, 2048, and more are on the way. Bookmark this page and check back.</p>
     </div>
   </section>
 </main>

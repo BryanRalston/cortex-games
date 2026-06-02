@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cosmic Sudoku — Free Online | Cortex Games</title>
+<meta name="description" content="Play Cosmic Sudoku free online. 9x9 logic puzzle among the stars with live scoring, combo multipliers, XP levels & cosmic ranks, a daily challenge, 4 difficulties (Easy to Expert), pencil marks, hints, undo, timer, best times and resume. Deep space nebulae theme, touch + keyboard.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cortexgames.com/games/sudoku/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cosmic Sudoku — Free Online Logic Puzzle | Cortex Games">
+<meta property="og:description" content="Cosmic Sudoku: 9x9 logic among the stars with live scoring, combos, XP levels & ranks, and a daily challenge. Pencil, hints, undo, best times. Play instantly.">
+<meta property="og:url" content="https://cortexgames.com/games/sudoku/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Cosmic Sudoku",
+  "description": "9x9 logic puzzle set in deep space with live scoring, combo multipliers, XP levels and cosmic ranks, and a daily challenge. 4 difficulties, pencil marks, hints, undo, timer, best times. Cosmic nebulae and celestial visuals. Keyboard and touch.",
+  "genre": ["Puzzle", "Logic", "Brain Training"],
+  "gamePlatform": "Web Browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "url": "https://cortexgames.com/games/sudoku/"
+}
+</script>
+<style>
+:root {
+  --bg: #050508;
+  --bg-elev: #0a0a10;
+  --text: #f1f5f9;
+  --text-muted: #64748b;
+--cyan: #67e8f9;
+  --cyan-dim: #164e63;
+  --purple: #c026ff;
+  --nebula: #6b46c1;
+  --gold: #fbbf24;
+  --star: #f0f9ff;
+  --border: #1e2937;
+  --error: #f87171;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.5;
+  overflow-x:hidden;
+  -webkit-user-select:none;user-select:none;
+  touch-action:manipulation;
+}
+a{color:var(--cyan);text-decoration:none}
+a:hover{color:#67e8f9}
+
+/* Background neural grid + particles (inspired exactly by Grok Imagine 8.jpg: cyan grid, soft curves, floating nodes on #050508 void) */
+#bg-canvas{
+  position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none;opacity:0.7;
+}
+.page-wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:0 0.75rem;width:100%}
+
+/* Header with glow title evoking Imagine 7.jpg hero (geometric grid + cyan connections on SUDOKU) */
+.game-header{text-align:center;padding:0.9rem 0 0.5rem}
+.game-header h1{
+  font-size:clamp(1.5rem, 8.5vw, 2.4rem);font-weight:900;letter-spacing:0.04em;text-transform:uppercase;
+  color:#fff;line-height:1.05;white-space:nowrap;
+  background:linear-gradient(180deg,#fff 0%,#cffafe 55%,#67e8f9 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 0 18px rgba(34,211,238,0.35);
+  filter:drop-shadow(0 0 10px rgba(34,211,238,0.45));
+  position:relative;display:inline-block;
+}
+.game-header h1::after{
+  content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);
+  width:72px;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0.7;
+}
+.game-header p{color:var(--text-muted);font-size:0.8125rem;margin-top:0.35rem}
+
+/* HUD */
+.hud{display:flex;flex-direction:column;gap:0.5rem;align-items:stretch;margin:0.4rem auto 0.5rem;max-width:520px;font-size:0.8125rem}
+.hud-row{display:flex;gap:0.4rem;align-items:stretch;justify-content:center}
+.hud-item{
+  background:linear-gradient(160deg,rgba(15,15,28,0.92),rgba(10,10,18,0.92));
+  border:1px solid var(--border);border-radius:10px;
+  padding:0.3rem 0.5rem;flex:1 1 0;min-width:0;text-align:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.hud-item .lab{font-size:0.5625rem;color:var(--cyan);font-weight:800;letter-spacing:0.07em;text-transform:uppercase;opacity:0.85}
+.hud-item .val{font-size:1rem;font-weight:800;line-height:1.15}
+.hud-item.score-item .val{color:var(--gold);text-shadow:0 0 10px rgba(251,191,36,0.4)}
+.timer{font-variant-numeric:tabular-nums}
+
+/* Level / XP bar */
+.level-bar-wrap{
+  display:flex;align-items:center;gap:0.55rem;
+  background:linear-gradient(160deg,rgba(15,15,28,0.92),rgba(10,10,18,0.92));
+  border:1px solid var(--border);border-radius:10px;padding:0.4rem 0.6rem;
+}
+.level-badge{
+  flex:none;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:0.95rem;color:#050508;
+  background:radial-gradient(circle at 30% 25%,#fde68a,var(--gold));
+  box-shadow:0 0 12px rgba(251,191,36,0.5);
+}
+.level-info{flex:1;min-width:0}
+.rank-name{font-size:0.7rem;font-weight:800;color:#fff;letter-spacing:0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xp-track{height:6px;border-radius:999px;background:rgba(103,232,249,0.12);overflow:hidden;margin-top:3px;border:1px solid rgba(103,232,249,0.12)}
+.xp-fill{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--cyan),#a855f7);box-shadow:0 0 8px rgba(103,232,249,0.6);transition:width 0.6s cubic-bezier(.2,.8,.2,1)}
+.xp-text{font-size:0.5625rem;color:var(--text-muted);margin-top:2px;letter-spacing:0.03em}
+
+/* Difficulty selector — segmented control, always fits one row */
+.diff-pills{display:flex;gap:0.25rem;width:100%;background:rgba(10,10,18,0.7);border:1px solid var(--border);border-radius:11px;padding:0.22rem}
+.diff-btn{
+  flex:1 1 0;min-width:0;font-size:clamp(0.62rem,2.8vw,0.78rem);font-weight:800;
+  padding:0.42rem 0.15rem;border-radius:8px;white-space:nowrap;
+  background:transparent;border:1px solid transparent;color:var(--text-muted);cursor:pointer;
+  transition:all 0.12s;display:flex;align-items:center;justify-content:center;gap:0.2rem;
+}
+.diff-btn.active{background:linear-gradient(160deg,var(--cyan-dim),rgba(22,78,99,0.5));border-color:var(--cyan);color:#fff;box-shadow:0 0 12px rgba(103,232,249,0.25)}
+.diff-btn:hover:not(.active){color:#e2e8f0;background:rgba(255,255,255,0.04)}
+.diff-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.diff-btn.daily{color:var(--gold)}
+.diff-btn.daily.active{background:linear-gradient(160deg,rgba(120,80,10,0.6),rgba(80,55,8,0.4));border-color:var(--gold);color:#fde68a;box-shadow:0 0 12px rgba(251,191,36,0.3)}
+.diff-btn .daily-check{font-size:0.7em}
+
+/* Game board */
+#game-wrap{
+  position:relative;margin:0.5rem auto;
+  max-width:480px;
+  width:100%;
+  border-radius:16px;
+  border:1px solid rgba(103,232,249,0.18);
+  background:radial-gradient(circle at 50% 0%, rgba(20,20,40,0.9), var(--bg-elev) 70%);
+  box-shadow:0 0 0 1px rgba(15,23,42,0.6), 0 14px 40px rgba(0,0,0,0.6), 0 0 30px rgba(103,232,249,0.06);
+  overflow:hidden;
+}
+.sudoku-grid{
+  display:grid;grid-template-columns:repeat(9,1fr);
+  width:100%;aspect-ratio:1/1;
+  background:#050508;
+  gap:0;border:0;
+}
+.cell{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1rem,5.2vw,1.5rem);font-weight:700;color:#e2e8f0;
+  background:transparent;
+  border:1px solid var(--border);
+  cursor:pointer;transition:background 0.12s, color 0.12s, box-shadow 0.12s;
+  min-height:34px;
+  user-select:none;
+}
+.cell:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px;z-index:3}
+.cell.clue{color:#f8fafc;font-weight:800}
+/* peer highlighting: row/col/box of selection */
+.cell.peer{background:rgba(103,232,249,0.055)}
+/* same-number highlight */
+.cell.same-num{background:rgba(168,85,247,0.16);color:#e9d5ff}
+/* Focus mode: rows/columns occupied by the chosen number (soft tint, lighter than peer) */
+.cell.focus-line{background:rgba(251,191,36,0.07)}
+/* Focus mode: cells holding the chosen number (strong gold glow, dominates same-num/peer) */
+.cell.focus-num{background:rgba(251,191,36,0.28)!important;color:#fffbeb!important;text-shadow:0 0 10px rgba(251,191,36,0.9);box-shadow:inset 0 0 0 1px rgba(251,191,36,0.55),0 0 14px rgba(251,191,36,0.3);z-index:1}
+.cell.selected{background:rgba(34,211,238,0.2)!important;box-shadow:inset 0 0 0 2px var(--cyan),0 0 14px rgba(103,232,249,0.35);z-index:2}
+.cell.conflict{color:var(--error)!important;background:rgba(248,113,113,0.12)!important}
+.cell.pop{animation:cellPop 0.32s ease-out}
+.cell.wrong{animation:cellShake 0.34s ease}
+@keyframes cellPop{0%{transform:scale(0.5);text-shadow:0 0 12px var(--cyan)}55%{transform:scale(1.22);text-shadow:0 0 18px var(--cyan)}100%{transform:scale(1);text-shadow:none}}
+@keyframes cellShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.cell.flash-red{box-shadow:inset 0 0 0 2px var(--error)}
+.cell .cands{
+  position:absolute;inset:1px 2px 2px 2px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  font-size:0.42rem;font-weight:600;color:rgba(148,163,184,0.75);pointer-events:none;line-height:1;
+  text-align:center;align-items:center;justify-items:center;
+}
+.cell .cands span{transform:translateY(-0.5px)}
+
+/* Combo popup near board */
+.combo-pop{
+  position:absolute;left:50%;top:42%;transform:translate(-50%,-50%) scale(0.6);
+  z-index:25;pointer-events:none;opacity:0;font-weight:900;letter-spacing:0.04em;text-align:center;
+}
+.combo-pop.show{animation:comboFx 0.95s cubic-bezier(.2,.9,.3,1) forwards}
+.combo-pop .cnum{font-size:2.4rem;line-height:1;background:linear-gradient(180deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(251,191,36,0.7))}
+.combo-pop .cpts{font-size:0.95rem;color:var(--cyan);text-shadow:0 0 8px rgba(103,232,249,0.6);margin-top:2px}
+@keyframes comboFx{0%{opacity:0;transform:translate(-50%,-50%) scale(0.5)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}70%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-95%) scale(0.95)}}
+
+/* 3x3 box borders */
+.cell:nth-child(3n){border-right-width:2px;border-right-color:#334155}
+.cell:nth-child(9n+1){border-left-width:2px;border-left-color:#334155}
+.cell:nth-child(n+19):nth-child(-n+27),.cell:nth-child(n+46):nth-child(-n+54),.cell:nth-child(n+73):nth-child(-n+81){border-bottom-width:2px;border-bottom-color:#334155}
+.cell:nth-child(-n+9),.cell:nth-child(n+28):nth-child(-n+36),.cell:nth-child(n+55):nth-child(-n+63){border-top-width:2px;border-top-color:#334155}
+
+/* Number pad — large thumb-friendly digits, full width on phone */
+.pad{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:0.3rem;max-width:480px;width:100%;margin:0.5rem auto 0.4rem}
+.pad-btn[data-num]{
+  position:relative;aspect-ratio:1/1.15;min-height:46px;border-radius:11px;
+  border:1px solid var(--border);
+  background:linear-gradient(160deg,rgba(20,20,38,0.95),rgba(10,10,18,0.95));
+  color:#e2e8f0;font-size:clamp(1.05rem,4.6vw,1.4rem);font-weight:800;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform 0.06s, background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.pad-btn[data-num]:active{transform:scale(0.92)}
+.pad-btn[data-num]:hover{border-color:var(--cyan);box-shadow:0 0 12px rgba(103,232,249,0.2)}
+.pad-btn[data-num] .rem{
+  position:absolute;top:2px;right:4px;font-size:0.5rem;font-weight:700;color:var(--cyan);opacity:0.75;line-height:1;
+}
+.pad-btn[data-num].depleted{opacity:0.32;pointer-events:none;color:var(--text-muted)}
+.pad-btn[data-num].depleted .rem{color:var(--text-muted)}
+/* secondary pad row: clear + pencil + focus */
+.pad-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.4rem;max-width:480px;width:100%;margin:0 auto 0.5rem}
+.pad-btn.util{
+  min-height:44px;border-radius:11px;border:1px solid var(--border);
+  background:linear-gradient(160deg,rgba(20,20,38,0.9),rgba(10,10,18,0.9));
+  color:#e2e8f0;font-size:0.8rem;font-weight:800;letter-spacing:0.04em;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:0.35rem;
+  transition:transform 0.06s, background 0.12s, border-color 0.12s;
+}
+.pad-btn.util:active{transform:scale(0.97)}
+.pad-btn.util:hover{border-color:var(--cyan)}
+.pad-btn.util.clear{color:var(--text-muted)}
+.pad-btn.util.mode.active{background:var(--cyan);color:#050508;border-color:var(--cyan)}
+/* Focus toggle active state — gold ring so it reads distinct from Pencil's cyan */
+.pad-btn.util.focus.active{background:linear-gradient(160deg,rgba(120,80,10,0.65),rgba(80,55,8,0.5));color:#fde68a;border-color:var(--gold);box-shadow:0 0 12px rgba(251,191,36,0.45),inset 0 0 0 1px rgba(251,191,36,0.5)}
+/* chosen focus digit indicated on the number pad */
+.pad-btn[data-num].focus-active{border-color:var(--gold);color:#fde68a;box-shadow:0 0 14px rgba(251,191,36,0.5),inset 0 0 0 1px rgba(251,191,36,0.55)}
+
+/* Action buttons — compact even bar, wraps gracefully */
+.actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0.35rem;max-width:480px;width:100%;margin:0.4rem auto 0.75rem}
+.btn{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0.1rem;
+  min-height:46px;padding:0.3rem 0.2rem;border-radius:10px;font-weight:700;font-size:0.62rem;letter-spacing:0.02em;
+  cursor:pointer;border:1px solid var(--border);
+  background:linear-gradient(160deg,rgba(20,20,38,0.9),rgba(10,10,18,0.9));color:#e2e8f0;
+  transition:background 0.12s,transform 0.06s,border-color 0.12s;
+}
+.btn .bi{font-size:1.05rem;line-height:1}
+.btn:active{transform:scale(0.95)}
+.btn:hover{border-color:var(--cyan)}
+.btn-primary{background:linear-gradient(160deg,var(--cyan),#22b8d4);color:#050508;border-color:var(--cyan)}
+.btn-primary .bi,.btn-primary{color:#050508}
+.btn-primary:hover{background:var(--cyan)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* Overlays & win */
+.overlay{
+  position:absolute;inset:0;background:rgba(5,5,8,0.88);backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:20;opacity:0;pointer-events:none;transition:opacity 0.2s;
+  border-radius:14px;
+}
+.overlay.active{opacity:1;pointer-events:all}
+.win-content{text-align:center;width:100%;max-width:340px;padding:0.5rem 1rem;max-height:100%;overflow-y:auto}
+.win-content h2{font-size:1.4rem;margin-bottom:0.15rem;color:#fff;text-shadow:0 0 14px rgba(103,232,249,0.4)}
+.win-content p{color:var(--text-muted);margin-bottom:0.5rem;font-size:0.8125rem}
+#pulse-canvas{width:96px;height:96px;margin:0 auto 0.35rem;display:block}
+.win-score-big{font-size:2.1rem;font-weight:900;line-height:1;background:linear-gradient(180deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 12px rgba(251,191,36,0.5))}
+.win-score-lab{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--cyan);font-weight:800;margin-bottom:0.4rem}
+.breakdown{text-align:left;background:rgba(10,10,18,0.6);border:1px solid var(--border);border-radius:10px;padding:0.5rem 0.7rem;margin:0.5rem 0;font-size:0.72rem}
+.breakdown .row{display:flex;justify-content:space-between;padding:0.12rem 0;color:#cbd5e1}
+.breakdown .row .v{font-weight:800;font-variant-numeric:tabular-nums}
+.breakdown .row.pen .v{color:var(--error)}
+.breakdown .row.bonus .v{color:var(--gold)}
+.win-xp{margin:0.5rem 0}
+.win-xp .xp-track{height:8px}
+.win-levelup{margin:0.4rem 0;font-weight:900;font-size:0.85rem;color:var(--gold);text-shadow:0 0 12px rgba(251,191,36,0.5);animation:cellPop 0.5s ease-out}
+.win-rank{font-size:0.7rem;color:var(--cyan);margin-top:2px}
+
+/* How to play + more games (match gem-fusion style) */
+.how-to,.more-games{
+  max-width:620px;margin:1.25rem auto;padding:1rem 1.1rem 1.1rem;
+  background:rgba(10,10,16,0.6);border:1px solid var(--border);border-radius:12px;
+}
+.how-to h2,.more-games h2{font-size:0.95rem;color:var(--cyan);margin-bottom:0.5rem;font-weight:700}
+.how-to ul{padding-left:1rem;color:var(--text-muted);font-size:0.8125rem}
+.how-to li{margin:0.2rem 0}
+.more-games-grid{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center}
+.more-link{
+  display:inline-flex;align-items:center;gap:0.3rem;padding:0.35rem 0.65rem;border-radius:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);font-size:0.75rem;font-weight:600;
+}
+.more-link:hover{background:rgba(34,211,238,0.08);border-color:var(--cyan)}
+
+/* Ad slots (per shared/ads.js + shared/style.css pattern). Real AdSense when enabled. Non-interrupting. Max 3. */
+.ad-slot{
+  background:var(--bg-elev);border:1px dashed var(--border);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.65rem;
+  margin:0.6rem auto;min-height:64px;
+}
+.ad-slot-banner{max-width:640px;width:100%}
+.ad-slot-side{display:none;width:300px;height:160px}
+@media (min-width:860px){.ad-slot-side{display:flex}}
+
+.side-promo{
+  position:fixed;right:10px;top:50%;transform:translateY(-50%);width:128px;padding:0.6rem;
+  background:rgba(10,10,16,0.92);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;text-decoration:none;color:var(--text);text-align:center;z-index:50;font-size:0.6875rem;
+  transition:border-color .15s,box-shadow .15s;
+}
+.side-promo:hover{border-color:var(--cyan);box-shadow:0 4px 20px rgba(34,211,238,0.25)}
+.side-promo .sp-icon{font-size:1.1rem;display:block;margin-bottom:0.2rem}
+.side-promo .sp-title{font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--cyan)}
+.side-promo .sp-desc{font-size:0.5625rem;color:var(--text-muted);line-height:1.25;margin:0.15rem 0 0.35rem}
+.side-promo .sp-cta{display:inline-block;padding:0.2rem 0.55rem;border-radius:999px;background:linear-gradient(135deg,var(--cyan),#0ea5e9);color:#050508;font-size:0.5625rem;font-weight:800;letter-spacing:0.04em}
+@media (max-width:1100px){.side-promo{display:none}}
+
+/* Responsive safety: never horizontal-scroll, tighten on small phones */
+@media (max-width:400px){
+  .page-wrap{padding:0 0.6rem}
+  .pad{gap:0.22rem}
+  .actions{gap:0.28rem}
+  .hud-item .val{font-size:0.9rem}
+}
+@media (max-width:360px){
+  .game-header h1{letter-spacing:0.02em}
+  .btn{font-size:0.56rem}
+}
+/* Big screens: keep centered, comfortable */
+@media (min-width:620px){
+  .game-header h1{font-size:2.6rem}
+}
+
+footer{text-align:center;padding:1.25rem 0 2rem;color:var(--text-muted);font-size:0.75rem}
+footer a{margin:0 0.4rem}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+<div class="page-wrap">
+
+<header class="game-header">
+  <h1>Cosmic Sudoku</h1>
+  <p>Stars • Grid • One solution</p>
+</header>
+
+<!-- Top ad placeholder (banner) -->
+<div class="ad-slot ad-slot-banner" aria-label="Advertisement" data-ad-slot="banner">
+  <!-- Real AdSense banner slot (shared/ads.js pattern) will load here when enabled. Non-interrupting. -->
+  <span>Advertisement</span>
+</div>
+
+<div class="hud">
+  <div class="hud-row">
+    <div class="hud-item score-item"><div class="lab">Score</div><div class="val" id="score">0</div></div>
+    <div class="hud-item"><div class="lab">Time</div><div class="val timer" id="timer">00:00</div></div>
+    <div class="hud-item"><div class="lab">Mistakes</div><div class="val" id="mistakes">0</div></div>
+    <div class="hud-item"><div class="lab">Hints</div><div class="val" id="hints">3/3</div></div>
+  </div>
+  <div class="level-bar-wrap" title="Lifetime progression">
+    <div class="level-badge" id="level-badge">1</div>
+    <div class="level-info">
+      <div class="rank-name" id="rank-name">Stardust Cadet</div>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill"></div></div>
+      <div class="xp-text" id="xp-text">0 / 500 XP</div>
+    </div>
+  </div>
+  <div class="diff-pills" id="diff-pills" role="group" aria-label="Mode and difficulty"></div>
+</div>
+
+<div id="game-wrap">
+  <div id="grid" class="sudoku-grid" role="grid" aria-label="Sudoku board 9 by 9"></div>
+
+  <!-- Combo popup -->
+  <div class="combo-pop" id="combo-pop" aria-hidden="true">
+    <div class="cnum" id="combo-num">COMBO ×2</div>
+    <div class="cpts" id="combo-pts">+200</div>
+  </div>
+
+  <!-- Win overlay with Pulse mascot (inspired by Grok Imagine 9.jpg) -->
+  <div class="overlay" id="win-overlay">
+    <div class="win-content">
+      <canvas id="pulse-canvas" width="96" height="96" aria-hidden="true"></canvas>
+      <!-- Literal Pulse mascot asset generated by the CineGrok Grok Imagine pipeline (build_reference.js on sudoku_visuals.json) and inlined here as data URL from the tiny optimized version of the hero PNG. -->
+      <img id="pulse-pipeline" alt="Pulse - cosmic celestial mascot (pipeline)" style="width:96px;height:96px;margin:0 auto 0.35rem;image-rendering:auto;display:block" />
+      <h2>The stars align.</h2>
+      <p id="win-time">Solved in 00:00</p>
+      <div class="win-score-lab">Final Score</div>
+      <div class="win-score-big" id="win-score">0</div>
+      <div class="breakdown" id="win-breakdown"></div>
+      <div class="win-xp">
+        <div class="xp-text" id="win-xp-text" style="margin-bottom:3px"></div>
+        <div class="xp-track"><div class="xp-fill" id="win-xp-fill"></div></div>
+      </div>
+      <div class="win-levelup" id="win-levelup" style="display:none"></div>
+      <div id="win-best" style="margin:0.4rem 0 0.6rem;font-size:0.7rem;color:#64748b"></div>
+      <div style="display:flex;gap:0.4rem;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" id="win-new" style="flex-direction:row">New Game</button>
+        <button class="btn" id="win-again" style="flex-direction:row">Same Difficulty</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pad" role="toolbar" aria-label="Number pad">
+  <button class="pad-btn" data-num="1">1<span class="rem" data-rem="1">9</span></button>
+  <button class="pad-btn" data-num="2">2<span class="rem" data-rem="2">9</span></button>
+  <button class="pad-btn" data-num="3">3<span class="rem" data-rem="3">9</span></button>
+  <button class="pad-btn" data-num="4">4<span class="rem" data-rem="4">9</span></button>
+  <button class="pad-btn" data-num="5">5<span class="rem" data-rem="5">9</span></button>
+  <button class="pad-btn" data-num="6">6<span class="rem" data-rem="6">9</span></button>
+  <button class="pad-btn" data-num="7">7<span class="rem" data-rem="7">9</span></button>
+  <button class="pad-btn" data-num="8">8<span class="rem" data-rem="8">9</span></button>
+  <button class="pad-btn" data-num="9">9<span class="rem" data-rem="9">9</span></button>
+</div>
+<div class="pad-actions">
+  <button class="pad-btn util clear" id="btn-clear">⌫ Erase</button>
+  <button class="pad-btn util mode" id="btn-notes">✎ Pencil</button>
+  <button class="pad-btn util focus" id="btn-focus" aria-pressed="false">🔦 Focus</button>
+</div>
+
+<div class="actions">
+  <button class="btn" id="btn-undo"><span class="bi">↶</span>Undo</button>
+  <button class="btn" id="btn-hint"><span class="bi">✧</span>Hint</button>
+  <button class="btn" id="btn-pause"><span class="bi">⏸</span>Pause</button>
+  <button class="btn" id="btn-restart"><span class="bi">⟳</span>Restart</button>
+  <button class="btn btn-primary" id="btn-new"><span class="bi">✦</span>New</button>
+</div>
+
+<!-- Side ad placeholder -->
+<div class="ad-slot ad-slot-side" aria-label="Advertisement" data-ad-slot="sidebar">
+  <!-- Real AdSense sidebar slot (shared/ads.js pattern) when enabled. -->
+  <span>Advertisement</span>
+</div>
+
+<section class="how-to">
+  <h2>How to Play</h2>
+  <ul>
+    <li>Fill the grid so every row, column, and 3×3 box contains 1–9 exactly once.</li>
+    <li>Tap a cell then tap a number (or use keyboard 1–9). Use arrows to move.</li>
+    <li>Tap <strong>PENCIL</strong> (or hold Shift) to toggle small candidate marks.</li>
+    <li>Red numbers = conflict with another in the same row, column or box.</li>
+    <li>Undo (or Ctrl/Cmd+Z), limited hints, timer, and best times are saved locally.</li>
+    <li>Every puzzle has exactly one solution. Clues are shown in bright text.</li>
+  </ul>
+</section>
+
+<section class="more-games">
+  <h2>More Free Games</h2>
+  <div class="more-games-grid">
+    <a href="../gem-fusion/index.html" class="more-link">💎 Gem Fusion</a>
+    <a href="../tetris-blitz/index.html" class="more-link">🧱 Tetris Blitz</a>
+    <a href="../resonance/index.html" class="more-link">◌ Resonance</a>
+    <a href="../thought-bricks/index.html" class="more-link">🧠 Thought Bricks</a>
+    <a href="../brix3d/index.html" class="more-link">🧱 BRIX 3D</a>
+    <a href="../color-by-numbers/index.html" class="more-link">🎨 Color By Numbers</a>
+    <a href="../../index.html" class="more-link">✦ All Games</a>
+  </div>
+</section>
+
+</div><!-- page-wrap -->
+
+<a href="https://bryman.gumroad.com/l/pfoyf" target="_blank" rel="noopener" class="side-promo" aria-label="Claude Code Starter Kit on Gumroad">
+  <span class="sp-icon">💻</span>
+  <div class="sp-title">Claude Code Starter Kit</div>
+  <div class="sp-desc">10 templates + memory + autonomous workflows</div>
+  <span class="sp-cta">$9 on Gumroad</span>
+</a>
+
+<footer>
+  <p>Built for Cortex Games • All puzzles have exactly one solution • <a href="#privacy">Privacy</a></p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+    // === COSMIC SUDOKU STYLE - Assets from CineGrok Grok Imagine pipeline ===
+  // Pipeline run produced base neural versions; then image_edit transformed to full cosmic:
+  //   deep space nebulae, stars, constellation grids, celestial orbs.
+  // Command history: build_reference.js on sudoku_visuals.json then image_edit "cosmic celestial" prompts.
+  // Final tiny assets (inlined below): C:\Users\bryan\Desktop\Sudoku_Imagine_Assets\*_cosmic_tiny.jpg
+  // Canvas code enhanced for cosmic: starfields, purple nebulae, golden accents, twinkles.
+  const PULSE_PIPELINE_B64 = "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";
+  const HERO_PIPELINE_B64 = "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";
+  const BG_PIPELINE_B64 = "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";
+  const DIFFS = {
+    easy: {label:'Easy', clues:46},
+    medium: {label:'Medium', clues:36},
+    hard: {label:'Hard', clues:28},
+    expert: {label:'Expert', clues:22}
+  };
+  const DIFF_ORDER = ['easy','medium','hard','expert'];
+  const MAX_HINTS = 3;
+  const LS_STATE = 'cortex-sudoku-state';
+  const LS_BEST = 'cortex-sudoku-bests';
+  const LS_PROGRESS = 'cortex-sudoku-progress';
+  const LS_DAILY = 'cortex-sudoku-daily';
+
+  // Scoring config
+  const DIFF_MULT = { easy:1, medium:1.5, hard:2, expert:3, daily:2 };
+  const BASE_PLACE = 100;            // base points per correct placement
+  const COMBO_STEP = 0.5;            // each combo step adds 50% of base
+  const MISTAKE_PENALTY = 75;        // points lost per mistake
+  const HINT_PENALTY = 120;          // points lost per hint
+  const FLAWLESS_BONUS = 1000;       // awarded on win with zero mistakes
+  const SPEED_BASE = 1200;           // speed bonus pool (decays over time)
+
+  // Progression — cosmic ranks. Level threshold curve.
+  const RANKS = [
+    'Stardust Cadet', 'Comet Rider', 'Nebula Navigator', 'Nova Pilot',
+    'Pulsar Adept', 'Quasar Master', 'Cosmic Grandmaster'
+  ];
+  function xpForLevel(lvl){ return 500 + (lvl-1)*350; } // XP needed to clear a given level
+  function rankForLevel(lvl){
+    // every 3 levels climbs a rank, capped
+    const idx = Math.min(RANKS.length-1, Math.floor((lvl-1)/3));
+    return RANKS[idx];
+  }
+
+  // ── State ──
+  let currentGrid = null;   // 9x9 player view (0=empty)
+  let solution = null;      // 9x9 full solution
+  let initialPuzzle = null; // original clues for reference
+  let notes = null;         // 9x9 bitmasks (1<<(n-1))
+  let selected = null;      // {r,c}
+  let notesMode = false;
+  let focusMode = false;    // number-focus/highlight mode toggle
+  let focusNum = 0;         // currently focused digit (0 = none)
+  let elapsed = 0;
+  let timerId = null;
+  let running = false;
+  let won = false;
+  let hintsUsed = 0;
+  let currentDiff = 'easy';
+  let undoStack = [];
+  let bests = loadBests();
+  let audioCtx = null;
+  // ── Scoring / progression state ──
+  let score = 0;
+  let combo = 0;          // consecutive correct placements
+  let maxCombo = 0;
+  let mistakes = 0;
+  let dailyMode = false;   // is current game the date-seeded daily?
+  let lastVal = 0;         // last/selected value for same-number highlight
+  let scoreBaseAcc = 0;    // accumulated base+combo points (for breakdown)
+  let scorePenaltyAcc = 0; // accumulated penalties (for breakdown)
+  let progress = loadProgress();
+
+  // ── Seeded RNG (mulberry32) for the daily challenge ──
+  let seededRand = null;   // function or null (null => use Math.random)
+  function mulberry32(seed){
+    let a = seed >>> 0;
+    return function(){
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function rng(){ return seededRand ? seededRand() : Math.random(); }
+  function todayKey(){
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function hashStr(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  // ── DOM refs ──
+  const gridEl = document.getElementById('grid');
+  const timerEl = document.getElementById('timer');
+  const hintsEl = document.getElementById('hints');
+  const winOverlay = document.getElementById('win-overlay');
+  const pulseCanvas = document.getElementById('pulse-canvas');
+  const diffPills = document.getElementById('diff-pills');
+  const bgCanvas = document.getElementById('bg-canvas');
+  let bgCtx = null;
+
+  // ── Audio (simple, inspired by resonance patterns: oscillators + gains, no external) ──
+  function initAudio(){ if(audioCtx) return; try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  function playTone(freq, dur, type='sine', vol=0.09){
+    if(!audioCtx) return;
+    try{
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      const t = audioCtx.currentTime;
+      g.gain.value = vol;
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start(t);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      o.stop(t + dur + 0.03);
+    }catch(e){}
+  }
+  function playPlace(){ playTone(880, 0.07, 'sine', 0.07); }
+  function playNote(){ playTone(660, 0.05, 'sine', 0.05); }
+  function playClear(){ playTone(440, 0.06, 'triangle', 0.06); }
+  function playError(){ playTone(220, 0.09, 'sawtooth', 0.06); }
+  function playWin(){
+    if(!audioCtx) return;
+    const seq = [523,659,784,1046,1318];
+    seq.forEach((f,i)=> setTimeout(()=>playTone(f, 0.18, 'sine', 0.085), i*95));
+  }
+
+  // ── Sudoku core (correct 1-9 rules, unique solution generator) ──
+  function copyGrid(g){ return g.map(r => r.slice()); }
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){ const j = Math.floor(rng()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+    return arr;
+  }
+  function isSafe(g, r, c, num){
+    for(let i=0;i<9;i++) if(g[r][i]===num || g[i][c]===num) return false;
+    const br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) if(g[br+i][bc+j]===num) return false;
+    return true;
+  }
+  function fillGrid(g){
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++) if(g[r][c]===0){
+      const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+      for(let n of nums){
+        if(isSafe(g,r,c,n)){
+          g[r][c] = n;
+          if(fillGrid(g)) return true;
+          g[r][c] = 0;
+        }
+      }
+      return false;
+    }
+    return true;
+  }
+  function generateFull(){
+    const g = Array.from({length:9}, () => Array(9).fill(0));
+    fillGrid(g);
+    return g;
+  }
+  function countSolutions(puz, limit=2){
+    let cnt = 0;
+    function bt(g){
+      if(cnt >= limit) return;
+      for(let r=0;r<9;r++)for(let c=0;c<9;c++) if(g[r][c]===0){
+        for(let n=1;n<=9;n++){
+          if(isSafe(g,r,c,n)){
+            g[r][c] = n;
+            bt(g);
+            g[r][c] = 0;
+            if(cnt >= limit) return;
+          }
+        }
+        return;
+      }
+      cnt++;
+    }
+    bt(copyGrid(puz));
+    return cnt;
+  }
+  function generatePuzzle(diffKey){
+    const full = generateFull();
+    let puz = copyGrid(full);
+    const cells = [];
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++) cells.push([r,c]);
+    shuffle(cells);
+    const targetClues = DIFFS[diffKey].clues;
+    let removed = 0;
+    for(let [r,c] of cells){
+      if(81 - removed <= targetClues) break;
+      const bak = puz[r][c];
+      puz[r][c] = 0;
+      if(countSolutions(puz, 2) === 1){
+        removed++;
+      }else{
+        puz[r][c] = bak;
+      }
+    }
+    return {puzzle: puz, solution: full};
+  }
+
+  // ── Conflicts (live red tint) ──
+  function getConflicts(g){
+    const conf = new Set();
+    // rows
+    for(let r=0;r<9;r++){
+      const seen = {};
+      for(let c=0;c<9;c++){
+        const v = g[r][c]; if(!v) continue;
+        const key = r+','+c;
+        if(seen[v] !== undefined){ conf.add(key); conf.add(seen[v]); }
+        else seen[v] = key;
+      }
+    }
+    // cols
+    for(let c=0;c<9;c++){
+      const seen = {};
+      for(let r=0;r<9;r++){
+        const v = g[r][c]; if(!v) continue;
+        const key = r+','+c;
+        if(seen[v] !== undefined){ conf.add(key); conf.add(seen[v]); }
+        else seen[v] = key;
+      }
+    }
+    // boxes
+    for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){
+      const seen = {};
+      for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+        const r=br*3+i, c=bc*3+j;
+        const v = g[r][c]; if(!v) continue;
+        const key = r+','+c;
+        if(seen[v] !== undefined){ conf.add(key); conf.add(seen[v]); }
+        else seen[v] = key;
+      }
+    }
+    return conf;
+  }
+
+  // ── Notes helpers ──
+  function hasNote(r,c,n){ return !!(notes[r][c] & (1<<(n-1))); }
+  function toggleNote(r,c,n){
+    notes[r][c] ^= (1<<(n-1));
+  }
+  function clearNotes(r,c){ notes[r][c] = 0; }
+
+  // ── Board render (DOM grid, accessible) ──
+  function renderGrid(){
+    gridEl.innerHTML = '';
+    const conf = getConflicts(currentGrid);
+    // determine the value to highlight (selected cell's value, else last entered)
+    let hlVal = 0;
+    if(selected){ hlVal = currentGrid[selected.r][selected.c] || 0; }
+    if(!hlVal) hlVal = lastVal || 0;
+    // ── Focus mode: precompute rows/cols occupied by the focused number ──
+    const focusRows = new Set();
+    const focusCols = new Set();
+    if(focusNum){
+      for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+        if(currentGrid[r][c] === focusNum){ focusRows.add(r); focusCols.add(c); }
+      }
+    }
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.setAttribute('role','gridcell');
+        cell.setAttribute('tabindex','0');
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+        const isClue = initialPuzzle[r][c] !== 0;
+        if(isClue) cell.classList.add('clue');
+        // peer highlight (row/col/box of selection)
+        if(selected){
+          const sameBox = (Math.floor(r/3)===Math.floor(selected.r/3) && Math.floor(c/3)===Math.floor(selected.c/3));
+          if(r===selected.r || c===selected.c || sameBox) cell.classList.add('peer');
+        }
+        const v = currentGrid[r][c];
+        // same-number highlight
+        if(hlVal && v === hlVal) cell.classList.add('same-num');
+        // focus-mode highlight (visually dominant over peer/same-num)
+        if(focusNum){
+          if(v === focusNum){
+            cell.classList.add('focus-num');
+          }else if(focusRows.has(r) || focusCols.has(c)){
+            cell.classList.add('focus-line');
+          }
+        }
+        if(v){
+          cell.textContent = v;
+          if(conf.has(r+','+c)) cell.classList.add('conflict');
+        }else{
+          // pencil candidates 3x3
+          const cands = document.createElement('div');
+          cands.className = 'cands';
+          let html = '';
+          for(let k=1;k<=9;k++){
+            html += hasNote(r,c,k) ? '<span>'+k+'</span>' : '<span></span>';
+          }
+          cands.innerHTML = html;
+          cell.appendChild(cands);
+        }
+        if(selected && selected.r===r && selected.c===c) cell.classList.add('selected');
+        // interactions
+        cell.addEventListener('click', () => selectCell(r,c));
+        cell.addEventListener('keydown', onCellKey);
+        gridEl.appendChild(cell);
+      }
+    }
+  }
+
+  function selectCell(r,c){
+    if(won) return;
+    // don't select if it's a clue and already filled from start? but allow view
+    const isClue = initialPuzzle[r][c] !== 0;
+    if(isClue && currentGrid[r][c] !== 0){
+      // still allow select for viewing conflicts
+    }
+    selected = {r,c};
+    if(currentGrid[r][c]) lastVal = currentGrid[r][c];
+    renderGrid();
+  }
+
+  function onCellKey(e){
+    if(!selected || won) return;
+    const {r,c} = selected;
+    if(e.key >= '1' && e.key <= '9'){
+      e.preventDefault();
+      const n = parseInt(e.key,10);
+      if(focusMode){ setFocusNum(focusNum === n ? 0 : n); return; }
+      placeOrNote(r, c, n);
+    }else if(e.key === '0' || e.key === 'Backspace' || e.key === 'Delete'){
+      e.preventDefault();
+      clearCell(r,c);
+    }else if(e.key === 'ArrowUp'){ e.preventDefault(); moveSel(-1,0); }
+    else if(e.key === 'ArrowDown'){ e.preventDefault(); moveSel(1,0); }
+    else if(e.key === 'ArrowLeft'){ e.preventDefault(); moveSel(0,-1); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); moveSel(0,1); }
+    else if(e.key.toLowerCase() === 'p'){ e.preventDefault(); toggleNotesMode(); }
+  }
+  function moveSel(dr,dc){
+    if(!selected) return;
+    let nr = (selected.r + dr + 9) % 9;
+    let nc = (selected.c + dc + 9) % 9;
+    selected = {r:nr, c:nc};
+    renderGrid();
+    // focus the new cell for a11y
+    const cells = gridEl.querySelectorAll('.cell');
+    const idx = nr*9 + nc;
+    if(cells[idx]) cells[idx].focus();
+  }
+
+  // ── Core actions ──
+  function pushUndo(){
+    undoStack.push({
+      grid: copyGrid(currentGrid),
+      notes: notes.map(row => row.slice()),
+      hintsUsed: hintsUsed,
+      score: score, combo: combo, mistakes: mistakes,
+      scoreBaseAcc: scoreBaseAcc, scorePenaltyAcc: scorePenaltyAcc
+    });
+    if(undoStack.length > 60) undoStack.shift();
+  }
+  function doUndo(){
+    if(!undoStack.length || won) return;
+    const prev = undoStack.pop();
+    currentGrid = prev.grid;
+    notes = prev.notes;
+    hintsUsed = prev.hintsUsed;
+    if(typeof prev.score === 'number'){
+      score = prev.score; combo = prev.combo; mistakes = prev.mistakes;
+      scoreBaseAcc = prev.scoreBaseAcc; scorePenaltyAcc = prev.scorePenaltyAcc;
+    }
+    updateHUD();
+    renderGrid();
+    saveState();
+    playClear();
+  }
+
+  function placeOrNote(r, c, num){
+    if(won) return;
+    const isClue = initialPuzzle[r][c] !== 0;
+    if(isClue) { playError(); return; }
+    pushUndo();
+    initAudio();
+    let placedCorrect = false, placedWrong = false;
+    if(notesMode){
+      toggleNote(r,c,num);
+      playNote();
+    }else{
+      const was = currentGrid[r][c];
+      currentGrid[r][c] = (was === num) ? 0 : num;
+      if(currentGrid[r][c] === num){
+        clearNotes(r,c); // auto clear notes on successful place
+        // ── scoring: compare against the known solution ──
+        if(solution && solution[r][c] === num){
+          placedCorrect = true;
+          combo++;
+          if(combo > maxCombo) maxCombo = combo;
+          const mult = DIFF_MULT[currentDiff] || 1;
+          const comboFactor = 1 + (combo - 1) * COMBO_STEP;
+          const gained = Math.round(BASE_PLACE * comboFactor * mult);
+          scoreBaseAcc += gained;
+          score += gained;
+          if(combo >= 2) showCombo(combo, gained);
+          playPlace();
+        }else{
+          // wrong number placed
+          placedWrong = true;
+          mistakes++;
+          combo = 0;
+          scorePenaltyAcc += MISTAKE_PENALTY;
+          score = Math.max(0, score - MISTAKE_PENALTY);
+          playError();
+        }
+      }else{
+        playClear();
+      }
+    }
+    lastVal = currentGrid[r][c] || lastVal;
+    checkWin();
+    updateHUD();
+    renderGrid();
+    // post-render placement feedback animation
+    if(placedCorrect || placedWrong){
+      const cells = gridEl.querySelectorAll('.cell');
+      const el = cells[r*9 + c];
+      if(el){ el.classList.add(placedWrong ? 'wrong' : 'pop'); if(placedWrong) el.classList.add('flash-red'); }
+    }
+    saveState();
+  }
+
+  function clearCell(r,c){
+    if(won) return;
+    const isClue = initialPuzzle[r][c] !== 0;
+    if(isClue || currentGrid[r][c]===0 && notes[r][c]===0) return;
+    pushUndo();
+    currentGrid[r][c] = 0;
+    notes[r][c] = 0;
+    updateHUD();
+    renderGrid();
+    saveState();
+    playClear();
+  }
+
+  function giveHint(){
+    if(won || hintsUsed >= MAX_HINTS) { playError(); return; }
+    // prefer filling a cell that has only one possible candidate (nice logic)
+    pushUndo();
+    let best = null;
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+      if(currentGrid[r][c] !== 0 || initialPuzzle[r][c] !== 0) continue;
+      let poss = 0, last=0;
+      for(let n=1;n<=9;n++){
+        if(isSafe(currentGrid, r, c, n)){ poss++; last = n; }
+      }
+      if(poss === 1){
+        best = {r,c,val:last};
+        break;
+      }
+    }
+    if(!best){
+      // fallback: any empty non-clue
+      const empties = [];
+      for(let r=0;r<9;r++)for(let c=0;c<9;c++) if(currentGrid[r][c]===0 && initialPuzzle[r][c]===0) empties.push([r,c]);
+      if(!empties.length) return;
+      const [r,c] = empties[Math.floor(Math.random()*empties.length)];
+      best = {r,c,val: solution[r][c]};
+    }
+    currentGrid[best.r][best.c] = best.val;
+    clearNotes(best.r, best.c);
+    hintsUsed++;
+    // hint penalty: lose points + break combo
+    combo = 0;
+    scorePenaltyAcc += HINT_PENALTY;
+    score = Math.max(0, score - HINT_PENALTY);
+    lastVal = best.val;
+    checkWin();
+    updateHUD();
+    renderGrid();
+    saveState();
+    playPlace();
+  }
+
+  function checkWin(){
+    if(won) return;
+    let full = true;
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++) if(currentGrid[r][c]===0){ full=false; break; }
+    if(!full) return;
+    const conf = getConflicts(currentGrid);
+    if(conf.size === 0){
+      won = true;
+      if(focusMode) setFocusMode(false); else { focusNum = 0; updateFocusPad(); }
+      stopTimer();
+      const t = formatTime(elapsed);
+      document.getElementById('win-time').textContent = 'Solved in ' + t;
+
+      const mult = DIFF_MULT[currentDiff] || 1;
+      // speed bonus: decays the longer you take (pool minus seconds*scale), scaled by difficulty
+      const speedBonus = Math.max(0, Math.round((SPEED_BASE - elapsed * 2) * mult));
+      const flawless = (mistakes === 0 && hintsUsed === 0);
+      const flawlessBonus = flawless ? Math.round(FLAWLESS_BONUS * mult) : 0;
+      // final score = accumulated base/combo - penalties + speed + flawless
+      score = Math.max(0, scoreBaseAcc - scorePenaltyAcc + speedBonus + flawlessBonus);
+
+      // XP awarded scales with score & difficulty
+      const xpEarned = Math.max(50, Math.round(score / 10 * (0.5 + mult * 0.4)));
+      const lvlRes = addXp(xpEarned);
+
+      // mark daily complete + remember best
+      const prev = bests[currentDiff];
+      let isNew = false;
+      if(!dailyMode){
+        if(!prev || elapsed < prev){ bests[currentDiff] = elapsed; saveBests(); isNew = true; }
+      }
+      if(dailyMode) markDailyDone();
+
+      // ── populate win card ──
+      document.getElementById('win-score').textContent = score.toLocaleString();
+      const bd = document.getElementById('win-breakdown');
+      let rows = '';
+      rows += '<div class="row"><span>Placements + combos</span><span class="v">+' + scoreBaseAcc.toLocaleString() + '</span></div>';
+      if(scorePenaltyAcc > 0) rows += '<div class="row pen"><span>Mistakes / hints</span><span class="v">−' + scorePenaltyAcc.toLocaleString() + '</span></div>';
+      rows += '<div class="row"><span>Speed bonus</span><span class="v">+' + speedBonus.toLocaleString() + '</span></div>';
+      if(flawlessBonus > 0) rows += '<div class="row bonus"><span>★ Flawless bonus</span><span class="v">+' + flawlessBonus.toLocaleString() + '</span></div>';
+      rows += '<div class="row"><span>Max combo</span><span class="v">×' + maxCombo + '</span></div>';
+      rows += '<div class="row"><span>Difficulty</span><span class="v">' + (dailyMode ? '★ Daily' : DIFFS[currentDiff].label) + ' (' + mult + '×)</span></div>';
+      bd.innerHTML = rows;
+
+      // XP bar + level-up
+      document.getElementById('win-xp-text').textContent = '+' + xpEarned.toLocaleString() + ' XP  •  Level ' + progress.level + ' · ' + rankForLevel(progress.level);
+      const needNow = xpForLevel(progress.level);
+      const pctNow = Math.max(0, Math.min(100, (progress.xp / needNow) * 100));
+      const wf = document.getElementById('win-xp-fill');
+      wf.style.width = '0%';
+      setTimeout(()=>{ wf.style.width = pctNow + '%'; }, 200);
+      const lu = document.getElementById('win-levelup');
+      if(lvlRes.leveled){
+        lu.style.display = 'block';
+        lu.innerHTML = '⬆ LEVEL UP! &nbsp;' + lvlRes.fromLevel + ' → ' + lvlRes.toLevel +
+          '<div class="win-rank">Rank: ' + rankForLevel(lvlRes.toLevel) + '</div>';
+      } else {
+        lu.style.display = 'none';
+      }
+
+      const bestEl = document.getElementById('win-best');
+      bestEl.innerHTML = dailyMode
+        ? '<span style="color:#fbbf24">★ Daily challenge complete!</span>'
+        : (isNew ? '<span style="color:#22d3ee">★ New best for '+DIFFS[currentDiff].label+'!</span>' : (prev ? 'Best: '+formatTime(prev) : ''));
+
+      updateHUD();
+      updateDiffPills();
+      winOverlay.classList.add('active');
+      drawPulseMascot();
+      // Use the literal inlined pipeline asset for the mascot (from CineGrok build_reference PNG)
+      try {
+        const pimg = document.getElementById('pulse-pipeline');
+        if (pimg && typeof PULSE_PIPELINE_B64 !== 'undefined' && PULSE_PIPELINE_B64.length > 100) {
+          pimg.src = 'data:image/jpeg;base64,' + PULSE_PIPELINE_B64;
+          pimg.style.display = 'block';
+        }
+      } catch(e){}
+      playWin();
+      // subtle grid pulse
+      const gw = document.getElementById('game-wrap');
+      gw.style.transition = 'box-shadow .6s';
+      gw.style.boxShadow = '0 0 0 1px rgba(15,23,42,0.6), 0 0 40px rgba(34,211,238,0.35)';
+      setTimeout(()=>{ gw.style.boxShadow = '0 0 0 1px rgba(15,23,42,0.6), 0 10px 30px rgba(0,0,0,0.5)'; }, 1400);
+    }
+  }
+
+  // ── Timer ──
+  function formatTime(s){
+    const m = Math.floor(s/60); const sec = s%60;
+    return (m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+  }
+  function startTimer(){
+    if(running || won) return;
+    running = true;
+    if(!timerId){
+      timerId = setInterval(()=>{
+        if(running && !won){ elapsed++; timerEl.textContent = formatTime(elapsed); }
+      }, 1000);
+    }
+  }
+  function stopTimer(){ running = false; if(timerId){ clearInterval(timerId); timerId=null; } }
+  function pauseToggle(){
+    if(won) return;
+    running = !running;
+    setPauseLabel(running);
+    if(running && elapsed > 0) startTimer();
+    else stopTimer();
+  }
+
+  // ── Combo popup ──
+  let comboTimer = null;
+  function showCombo(n, pts){
+    const pop = document.getElementById('combo-pop');
+    if(!pop) return;
+    document.getElementById('combo-num').textContent = 'COMBO ×' + n;
+    document.getElementById('combo-pts').textContent = '+' + pts;
+    pop.classList.remove('show');
+    // force reflow to restart animation
+    void pop.offsetWidth;
+    pop.classList.add('show');
+    if(comboTimer) clearTimeout(comboTimer);
+    comboTimer = setTimeout(()=>{ pop.classList.remove('show'); }, 1000);
+  }
+
+  // ── Remaining-count for each digit (how many still unplaced) ──
+  function updatePadCounts(){
+    const counts = [0,0,0,0,0,0,0,0,0,0]; // index 1..9
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){ const v=currentGrid[r][c]; if(v) counts[v]++; }
+    for(let n=1;n<=9;n++){
+      const remaining = 9 - counts[n];
+      const span = document.querySelector('.rem[data-rem="'+n+'"]');
+      if(span) span.textContent = remaining > 0 ? remaining : '';
+      const btn = document.querySelector('.pad-btn[data-num="'+n+'"]');
+      if(btn) btn.classList.toggle('depleted', remaining <= 0);
+    }
+  }
+
+  // ── Progression / XP HUD ──
+  function loadProgress(){
+    try{
+      const p = JSON.parse(localStorage.getItem(LS_PROGRESS));
+      if(p && typeof p.xp === 'number') return p;
+    }catch(e){}
+    return { xp:0, level:1, totalXp:0 };
+  }
+  function saveProgress(){
+    try{ localStorage.setItem(LS_PROGRESS, JSON.stringify(progress)); }catch(e){}
+  }
+  function updateLevelHUD(){
+    const lvl = progress.level;
+    const need = xpForLevel(lvl);
+    const cur = progress.xp;
+    document.getElementById('level-badge').textContent = lvl;
+    document.getElementById('rank-name').textContent = rankForLevel(lvl);
+    const pct = Math.max(0, Math.min(100, (cur / need) * 100));
+    document.getElementById('xp-fill').style.width = pct + '%';
+    document.getElementById('xp-text').textContent = cur + ' / ' + need + ' XP';
+  }
+  // Add XP and resolve level-ups. Returns {leveled, fromLevel, toLevel}.
+  function addXp(amount){
+    const fromLevel = progress.level;
+    progress.xp += amount;
+    progress.totalXp = (progress.totalXp||0) + amount;
+    let leveled = false;
+    while(progress.xp >= xpForLevel(progress.level)){
+      progress.xp -= xpForLevel(progress.level);
+      progress.level++;
+      leveled = true;
+    }
+    saveProgress();
+    return { leveled, fromLevel, toLevel: progress.level };
+  }
+
+  // ── HUD / UI ──
+  function updateHUD(){
+    timerEl.textContent = formatTime(elapsed);
+    hintsEl.textContent = Math.max(0, MAX_HINTS - hintsUsed) + '/' + MAX_HINTS;
+    document.getElementById('score').textContent = score.toLocaleString();
+    document.getElementById('mistakes').textContent = mistakes;
+    document.getElementById('btn-undo').disabled = !undoStack.length;
+    document.getElementById('btn-hint').disabled = (hintsUsed >= MAX_HINTS || won);
+    updatePadCounts();
+    updateLevelHUD();
+  }
+  function updateDiffPills(){
+    diffPills.innerHTML = '';
+    DIFF_ORDER.forEach(key=>{
+      const b = document.createElement('button');
+      b.className = 'diff-btn' + (!dailyMode && key===currentDiff ? ' active' : '');
+      b.textContent = DIFFS[key].label;
+      b.addEventListener('click', () => {
+        if(!dailyMode && key === currentDiff && !won) return;
+        newGame(key);
+      });
+      diffPills.appendChild(b);
+    });
+    // Daily challenge button
+    const daily = document.createElement('button');
+    daily.className = 'diff-btn daily' + (dailyMode ? ' active' : '');
+    const done = isDailyDone();
+    daily.innerHTML = '★ Daily' + (done ? ' <span class="daily-check">✓</span>' : '');
+    daily.title = done ? "Today's daily challenge complete!" : "Play today's date-seeded challenge";
+    daily.addEventListener('click', () => { if(dailyMode && !won) return; startDaily(); });
+    diffPills.appendChild(daily);
+  }
+
+  // ── Daily challenge persistence ──
+  function loadDaily(){
+    try{ return JSON.parse(localStorage.getItem(LS_DAILY)) || {}; }catch(e){ return {}; }
+  }
+  function isDailyDone(){
+    const d = loadDaily();
+    return d.date === todayKey() && !!d.completed;
+  }
+  function markDailyDone(){
+    try{
+      const prev = loadDaily();
+      const streak = (prev.lastCompleted && isYesterday(prev.lastCompleted)) ? (prev.streak||0)+1 : 1;
+      localStorage.setItem(LS_DAILY, JSON.stringify({ date: todayKey(), completed:true, lastCompleted: todayKey(), streak }));
+    }catch(e){}
+  }
+  function isYesterday(key){
+    const d = new Date(); d.setDate(d.getDate()-1);
+    const y = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    return key === y;
+  }
+  function startDaily(){
+    dailyMode = true;
+    seededRand = mulberry32(hashStr('cosmic-sudoku-' + todayKey()));
+    // daily uses a fixed medium-hard difficulty for fairness
+    newGame('hard', true);
+    seededRand = null; // restore random for subsequent non-daily play
+  }
+
+  // ── New / Restart / Load ──
+  function newGame(diffKey, keepDaily){
+    stopTimer();
+    if(!keepDaily) dailyMode = false; // explicit difficulty pick exits daily mode
+    currentDiff = diffKey || currentDiff;
+    const gen = generatePuzzle(currentDiff);
+    initialPuzzle = copyGrid(gen.puzzle);
+    currentGrid = copyGrid(gen.puzzle);
+    solution = gen.solution;
+    notes = Array.from({length:9}, () => Array(9).fill(0));
+    selected = null;
+    undoStack = [];
+    elapsed = 0;
+    hintsUsed = 0;
+    won = false;
+    running = false;
+    // reset scoring
+    score = 0; combo = 0; maxCombo = 0; mistakes = 0;
+    scoreBaseAcc = 0; scorePenaltyAcc = 0; lastVal = 0;
+    if(focusMode) setFocusMode(false); else { focusNum = 0; updateFocusPad(); }
+    winOverlay.classList.remove('active');
+    updateDiffPills();
+    renderGrid();
+    updateHUD();
+    saveState();
+    // start timer on first interaction (via place or select+num)
+    setPauseLabel(true);
+  }
+  function restartCurrent(){
+    if(!initialPuzzle) return;
+    stopTimer();
+    currentGrid = copyGrid(initialPuzzle);
+    notes = Array.from({length:9}, () => Array(9).fill(0));
+    selected = null;
+    undoStack = [];
+    elapsed = 0;
+    hintsUsed = 0;
+    won = false;
+    running = false;
+    score = 0; combo = 0; maxCombo = 0; mistakes = 0;
+    scoreBaseAcc = 0; scorePenaltyAcc = 0; lastVal = 0;
+    if(focusMode) setFocusMode(false); else { focusNum = 0; updateFocusPad(); }
+    winOverlay.classList.remove('active');
+    renderGrid();
+    updateHUD();
+    saveState();
+    setPauseLabel(true);
+  }
+  // pause/notes buttons contain icon spans; set label without nuking icon
+  function setPauseLabel(isPaused){
+    const b = document.getElementById('btn-pause');
+    b.innerHTML = isPaused ? '<span class="bi">⏸</span>Pause' : '<span class="bi">▶</span>Resume';
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(LS_STATE);
+      if(!raw) return false;
+      const s = JSON.parse(raw);
+      if(!s || !s.grid || !s.solution || !DIFFS[s.diff]) return false;
+      currentDiff = s.diff;
+      // reconstruct 9x9
+      currentGrid = [];
+      for(let i=0;i<9;i++) currentGrid.push(s.grid.slice(i*9, i*9+9));
+      solution = [];
+      for(let i=0;i<9;i++) solution.push(s.solution.slice(i*9, i*9+9));
+      initialPuzzle = s.initial ? (function(){ let ip=[]; for(let i=0;i<9;i++) ip.push(s.initial.slice(i*9,i*9+9)); return ip; })() : copyGrid(currentGrid);
+      notes = s.notes ? (function(){ let n=[]; for(let i=0;i<9;i++){ const row=s.notes.slice(i*9,i*9+9); n.push(row); } return n; })() : Array.from({length:9},()=>Array(9).fill(0));
+      elapsed = s.elapsed || 0;
+      hintsUsed = s.hintsUsed || 0;
+      won = !!s.won;
+      // restore scoring
+      score = s.score || 0;
+      combo = s.combo || 0;
+      maxCombo = s.maxCombo || 0;
+      mistakes = s.mistakes || 0;
+      scoreBaseAcc = s.scoreBaseAcc || 0;
+      scorePenaltyAcc = s.scorePenaltyAcc || 0;
+      dailyMode = !!s.dailyMode;
+      return true;
+    }catch(e){ return false; }
+  }
+  function saveState(){
+    if(!currentGrid || !solution) return;
+    try{
+      const flatG = currentGrid.flat();
+      const flatS = solution.flat();
+      const flatI = initialPuzzle ? initialPuzzle.flat() : flatG;
+      const flatN = notes.flat();
+      const data = {
+        diff: currentDiff,
+        grid: flatG,
+        solution: flatS,
+        initial: flatI,
+        notes: flatN,
+        elapsed: elapsed,
+        hintsUsed: hintsUsed,
+        won: won,
+        score: score, combo: combo, maxCombo: maxCombo, mistakes: mistakes,
+        scoreBaseAcc: scoreBaseAcc, scorePenaltyAcc: scorePenaltyAcc,
+        dailyMode: dailyMode,
+        ts: Date.now()
+      };
+      localStorage.setItem(LS_STATE, JSON.stringify(data));
+    }catch(e){}
+  }
+  function loadBests(){
+    try{ return JSON.parse(localStorage.getItem(LS_BEST)) || {}; }catch(e){return {};}
+  }
+  function saveBests(){
+    try{ localStorage.setItem(LS_BEST, JSON.stringify(bests)); }catch(e){}
+  }
+
+  // ── Animated cosmic background (layered parallax starfield, drifting nebulae,
+  //    shooting stars, orbiting ringed planets). Single rAF loop, paused when hidden,
+  //    honors prefers-reduced-motion. Real browser clock via performance.now(). ──
+  let bgStars = [];      // {x,y,r,layer,base,hue,tw,sp}
+  let bgNebulae = [];    // {x,y,rad,col,drift,phase,amp}
+  let bgPlanets = [];    // {cx,cy,orbit,ang,spd,r,body,ring,glow,tilt}
+  let bgShooters = [];   // active shooting stars
+  let bgNextShooter = 0; // timestamp for next spawn
+  let bgRaf = null;
+  let bgReduced = false;
+  try { bgReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+
+  function seedBgGeometry(){
+    const w = bgCanvas.width, h = bgCanvas.height;
+    const scale = (window.devicePixelRatio||1);
+    // Deep parallax starfield: 3 depth layers, ~110 stars total
+    bgStars = [];
+    const layerCounts = [44, 40, 28]; // far -> near
+    const layerSpeed = [0.0035, 0.009, 0.018]; // px drift per ms (* scale)
+    const layerSize  = [0.7, 1.05, 1.5];
+    for(let L=0; L<3; L++){
+      for(let i=0; i<layerCounts[L]; i++){
+        const roll = Math.random();
+        // mostly white, some cyan, occasional gold
+        let hue = '240,249,255';
+        if(roll > 0.93) hue = '251,191,36';      // gold (rare)
+        else if(roll > 0.72) hue = '103,232,249'; // cyan
+        bgStars.push({
+          x: Math.random()*w,
+          y: Math.random()*h,
+          r: (layerSize[L] * (0.6 + Math.random()*0.9)) * scale,
+          base: 0.35 + Math.random()*0.45,
+          hue: hue,
+          tw: Math.random()*Math.PI*2,           // twinkle phase
+          tws: 0.4 + Math.random()*0.9,          // twinkle speed
+          sp: layerSpeed[L] * scale
+        });
+      }
+    }
+    // Drifting nebula clouds (large soft radial blobs)
+    bgNebulae = [
+      { x:w*0.18, y:h*0.26, rad:Math.max(w,h)*0.42, col:'107,70,193',  amp:0.05, phase:Math.random()*6.28 }, // purple
+      { x:w*0.82, y:h*0.70, rad:Math.max(w,h)*0.40, col:'192,38,255',  amp:0.045, phase:Math.random()*6.28 }, // magenta
+      { x:w*0.55, y:h*0.92, rad:Math.max(w,h)*0.46, col:'79,70,229',   amp:0.04, phase:Math.random()*6.28 }, // indigo
+      { x:w*0.92, y:h*0.16, rad:Math.max(w,h)*0.30, col:'34,211,238',  amp:0.035, phase:Math.random()*6.28 }  // hint of cyan
+    ];
+    bgNebulae.forEach(n => { n.ox = n.x; n.oy = n.y; n.dx = (Math.random()-0.5); n.dy = (Math.random()-0.5); });
+    // Orbiting ringed planets — kept off to the sides so they never sit behind the board center
+    bgPlanets = [
+      { cx:w*0.12, cy:h*0.20, orbit:Math.min(w,h)*0.06, ang:Math.random()*6.28, spd:0.00006, r:18*scale, body:'139,92,246', ring:'196,181,253', tilt:-0.5 },
+      { cx:w*0.88, cy:h*0.82, orbit:Math.min(w,h)*0.05, ang:Math.random()*6.28, spd:-0.00005, r:14*scale, body:'34,211,238', ring:'165,243,252', tilt:0.6 }
+    ];
+    // shooting stars
+    bgShooters = [];
+    bgNextShooter = performance.now() + 1500 + Math.random()*4000;
+  }
+
+  function spawnShooter(w,h){
+    const fromLeft = Math.random() < 0.5;
+    const sx = fromLeft ? -40 : w*(0.3 + Math.random()*0.7);
+    const sy = Math.random()*h*0.5;
+    const ang = (fromLeft ? 0.35 : 0.75) + Math.random()*0.25; // downward-ish
+    const speed = (0.6 + Math.random()*0.5) * (window.devicePixelRatio||1);
+    bgShooters.push({
+      x:sx, y:sy,
+      vx:Math.cos(ang)*speed*(fromLeft?1:-1), vy:Math.sin(ang)*speed,
+      life:0, max:700 + Math.random()*500,
+      len:(80 + Math.random()*70)*(window.devicePixelRatio||1)
+    });
+  }
+
+  function initBg(){
+    if(!bgCanvas) return;
+    bgCtx = bgCanvas.getContext('2d', {alpha:true});
+    function resize(){
+      bgCanvas.width = Math.floor(window.innerWidth * (window.devicePixelRatio||1));
+      bgCanvas.height = Math.floor(window.innerHeight * (window.devicePixelRatio||1));
+      bgCanvas.style.width = window.innerWidth + 'px';
+      bgCanvas.style.height = window.innerHeight + 'px';
+      seedBgGeometry();
+    }
+    resize();
+    window.addEventListener('resize', resize, {passive:true});
+
+    // Pause when the tab is hidden; resume when visible (battery saver)
+    document.addEventListener('visibilitychange', () => {
+      if(document.hidden){
+        if(bgRaf){ cancelAnimationFrame(bgRaf); bgRaf = null; }
+      }else if(!bgRaf){
+        bgLast = performance.now();
+        bgRaf = requestAnimationFrame(drawBg);
+      }
+    });
+
+    if(bgReduced){
+      // static-ish calm scene: draw once, no loop
+      drawBgFrame(performance.now(), 0, true);
+    }else{
+      bgLast = performance.now();
+      bgRaf = requestAnimationFrame(drawBg);
+    }
+  }
+
+  let bgLast = 0;
+  function drawBg(now){
+    bgRaf = null;
+    if(document.hidden) return; // safety
+    const dt = Math.min(80, now - bgLast); // clamp delta (tab switch / lag)
+    bgLast = now;
+    drawBgFrame(now, dt, false);
+    bgRaf = requestAnimationFrame(drawBg);
+  }
+
+  function drawBgFrame(now, dt, isStatic){
+    if(!bgCtx || !bgCanvas) return;
+    const w = bgCanvas.width, h = bgCanvas.height;
+    const scale = (window.devicePixelRatio||1);
+    bgCtx.clearRect(0,0,w,h);
+
+    // ── Nebula clouds (drawn first, behind everything) ──
+    bgCtx.save();
+    bgCtx.globalCompositeOperation = 'lighter';
+    for(let i=0;i<bgNebulae.length;i++){
+      const n = bgNebulae[i];
+      let nx = n.ox, ny = n.oy, pulse = 1;
+      if(!isStatic){
+        const tt = now * 0.00002;
+        nx = n.ox + Math.sin(tt + n.phase) * n.dx * w * 0.04;
+        ny = n.oy + Math.cos(tt*0.8 + n.phase) * n.dy * h * 0.04;
+        pulse = 1 + Math.sin(now*0.0004 + n.phase) * 0.12;
+      }
+      const g = bgCtx.createRadialGradient(nx, ny, n.rad*0.04, nx, ny, n.rad*pulse);
+      g.addColorStop(0, 'rgba(' + n.col + ',' + (n.amp*1.7).toFixed(3) + ')');
+      g.addColorStop(0.45, 'rgba(' + n.col + ',' + (n.amp*0.6).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(' + n.col + ',0)');
+      bgCtx.fillStyle = g;
+      bgCtx.fillRect(0,0,w,h);
+    }
+    bgCtx.restore();
+
+    // ── Parallax starfield ──
+    for(let i=0;i<bgStars.length;i++){
+      const s = bgStars[i];
+      if(!isStatic){
+        s.x += s.sp * dt;            // gentle horizontal drift; nearer = faster
+        if(s.x - s.r > w) s.x = -s.r;
+        s.tw += s.tws * dt * 0.004;
+      }
+      const twinkle = isStatic ? 0.85 : (0.65 + Math.sin(s.tw) * 0.35);
+      bgCtx.beginPath();
+      bgCtx.fillStyle = 'rgba(' + s.hue + ',' + (s.base * twinkle).toFixed(3) + ')';
+      bgCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      bgCtx.fill();
+      // subtle glow on the brighter/near stars
+      if(s.r > 1.2*scale){
+        bgCtx.beginPath();
+        bgCtx.fillStyle = 'rgba(' + s.hue + ',' + (0.10 * twinkle).toFixed(3) + ')';
+        bgCtx.arc(s.x, s.y, s.r*2.6, 0, Math.PI*2);
+        bgCtx.fill();
+      }
+    }
+
+    // ── Orbiting ringed planets (off to the sides) ──
+    for(let i=0;i<bgPlanets.length;i++){
+      const p = bgPlanets[i];
+      if(!isStatic) p.ang += p.spd * dt;
+      const px = p.cx + Math.cos(p.ang) * p.orbit;
+      const py = p.cy + Math.sin(p.ang) * p.orbit;
+      bgCtx.save();
+      // outer glow
+      const glow = bgCtx.createRadialGradient(px, py, p.r*0.3, px, py, p.r*2.6);
+      glow.addColorStop(0, 'rgba(' + p.body + ',0.16)');
+      glow.addColorStop(1, 'rgba(' + p.body + ',0)');
+      bgCtx.fillStyle = glow;
+      bgCtx.beginPath(); bgCtx.arc(px, py, p.r*2.6, 0, Math.PI*2); bgCtx.fill();
+      // ring (thin ellipse behind+front)
+      bgCtx.translate(px, py);
+      bgCtx.rotate(p.tilt);
+      bgCtx.strokeStyle = 'rgba(' + p.ring + ',0.32)';
+      bgCtx.lineWidth = Math.max(1, 1.4*scale);
+      bgCtx.beginPath();
+      bgCtx.ellipse(0, 0, p.r*1.9, p.r*0.62, 0, 0, Math.PI*2);
+      bgCtx.stroke();
+      bgCtx.rotate(-p.tilt);
+      // body with radial shading
+      const body = bgCtx.createRadialGradient(-p.r*0.35, -p.r*0.35, p.r*0.1, 0, 0, p.r);
+      body.addColorStop(0, 'rgba(' + p.body + ',0.85)');
+      body.addColorStop(1, 'rgba(' + p.body + ',0.28)');
+      bgCtx.fillStyle = body;
+      bgCtx.beginPath(); bgCtx.arc(0, 0, p.r, 0, Math.PI*2); bgCtx.fill();
+      bgCtx.restore();
+    }
+
+    // ── Shooting stars (skip entirely in reduced-motion) ──
+    if(!isStatic){
+      if(now >= bgNextShooter && bgShooters.length < 2){
+        spawnShooter(w, h);
+        bgNextShooter = now + 6000 + Math.random()*12000; // a few per minute, staggered
+      }
+      for(let i=bgShooters.length-1;i>=0;i--){
+        const sh = bgShooters[i];
+        sh.life += dt;
+        sh.x += sh.vx * dt;
+        sh.y += sh.vy * dt;
+        const lifeFrac = sh.life / sh.max;
+        if(lifeFrac >= 1 || sh.x < -120 || sh.x > w+120 || sh.y > h+120){
+          bgShooters.splice(i,1); continue;
+        }
+        const fade = Math.sin(Math.min(1,lifeFrac)*Math.PI); // fade in/out
+        const tx = sh.x - sh.vx * (sh.len / Math.hypot(sh.vx, sh.vy));
+        const ty = sh.y - sh.vy * (sh.len / Math.hypot(sh.vx, sh.vy));
+        const grad = bgCtx.createLinearGradient(sh.x, sh.y, tx, ty);
+        grad.addColorStop(0, 'rgba(240,249,255,' + (0.9*fade).toFixed(3) + ')');
+        grad.addColorStop(0.4, 'rgba(103,232,249,' + (0.45*fade).toFixed(3) + ')');
+        grad.addColorStop(1, 'rgba(103,232,249,0)');
+        bgCtx.strokeStyle = grad;
+        bgCtx.lineWidth = 1.8*scale;
+        bgCtx.lineCap = 'round';
+        bgCtx.beginPath(); bgCtx.moveTo(sh.x, sh.y); bgCtx.lineTo(tx, ty); bgCtx.stroke();
+        // bright head
+        bgCtx.beginPath();
+        bgCtx.fillStyle = 'rgba(255,255,255,' + (0.9*fade).toFixed(3) + ')';
+        bgCtx.arc(sh.x, sh.y, 1.8*scale, 0, Math.PI*2); bgCtx.fill();
+      }
+    }
+  }
+
+  // ── Pulse mascot (canvas, minimal bytes, faithful to Imagine 9.jpg: cute orb, grid texture, big eyes, smile, cyan nodes + arcs) ──
+  function drawPulseMascot(){
+    const c = pulseCanvas;
+    const ctx = c.getContext('2d');
+    const W = c.width, H = c.height;
+    ctx.clearRect(0,0,W,H);
+    const cx = W/2, cy = H/2, r = 38;
+    const nt = Date.now() / 900;
+
+    // outer cosmic nebula glow (purple + gold)
+    const glow = ctx.createRadialGradient(cx,cy,r*0.65, cx,cy,r*2.1);
+    glow.addColorStop(0, 'rgba(192,38,255,0.38)');
+    glow.addColorStop(0.5, 'rgba(251,191,36,0.18)');
+    glow.addColorStop(1, 'rgba(103,232,249,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath(); ctx.arc(cx,cy,r*1.9,0,Math.PI*2); ctx.fill();
+
+    // main celestial body - gradient with nebula feel
+    const body = ctx.createRadialGradient(cx-10,cy-14,7, cx+6,cy+8,r);
+    body.addColorStop(0, 'rgba(245,243,255,0.98)');
+    body.addColorStop(0.4, 'rgba(196,181,253,0.95)');
+    body.addColorStop(0.75, 'rgba(167,139,250,0.9)');
+    body.addColorStop(1, 'rgba(103,232,249,0.85)');
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+
+    // subtle starry rim
+    ctx.strokeStyle = 'rgba(251,191,36,0.35)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+
+    // constellation grid texture (Sudoku as stars)
+    ctx.strokeStyle = 'rgba(15,23,42,0.18)';
+    ctx.lineWidth = 0.8;
+    const step = r*0.58;
+    for(let i=-1;i<=1;i++){
+      ctx.beginPath();
+      ctx.moveTo(cx-r*0.7, cy + i*step*0.55);
+      ctx.lineTo(cx+r*0.7, cy + i*step*0.55);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + i*step*0.55, cy-r*0.7);
+      ctx.lineTo(cx + i*step*0.55, cy+r*0.7);
+      ctx.stroke();
+    }
+    // star dots on grid
+    ctx.fillStyle = 'rgba(251,191,36,0.65)';
+    for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){
+      ctx.beginPath(); ctx.arc(cx + i*step*0.55, cy + j*step*0.55, 1.5,0,Math.PI*2); ctx.fill();
+    }
+
+    // cosmic eyes (deeper purple glow)
+    const eyeY = cy-6, eyeR = 9.5;
+    ctx.fillStyle = '#1e1135';
+    ctx.beginPath(); ctx.arc(cx-12, eyeY, eyeR, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+13, eyeY, eyeR, 0, Math.PI*2); ctx.fill();
+    // inner cosmic glow
+    ctx.fillStyle = '#c026ff';
+    ctx.beginPath(); ctx.arc(cx-12, eyeY-2.5, 3.6, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+13, eyeY-2.5, 3.6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx-14.3, eyeY-4, 2.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+10.7, eyeY-4, 2.1, 0, Math.PI*2); ctx.fill();
+
+    // gentle smile
+    ctx.strokeStyle = 'rgba(15,23,42,0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy+9, 7.5, 0.3*Math.PI, 0.7*Math.PI);
+    ctx.stroke();
+
+    // orbiting cosmic nodes (stars + small planets)
+    ctx.strokeStyle = 'rgba(251,191,36,0.85)';
+    ctx.lineWidth = 1.2;
+    const nodes = [
+      {a: -1.35, d: r+7}, {a: -0.6, d: r+9},
+      {a: 0.85, d: r+8}, {a: 1.9, d: r+7.5},
+      {a: 2.7, d: r+10}
+    ];
+    nodes.forEach((nd,i) => {
+      const ang = nd.a + (i%2? Math.sin(nt*0.7)*0.08 : 0);
+      const nx = cx + Math.cos(ang)*nd.d;
+      const ny = cy + Math.sin(ang)*nd.d*0.82;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(ang)*r*0.96, cy + Math.sin(ang)*r*0.82);
+      ctx.quadraticCurveTo(cx + Math.cos(ang+0.6)*r*1.15, cy + Math.sin(ang+0.4)*r*0.9, nx, ny);
+      ctx.stroke();
+      // node
+      ctx.fillStyle = (i%3===0) ? '#fbbf24' : '#67e8f9';
+      ctx.beginPath(); ctx.arc(nx, ny, 2.2,0,Math.PI*2); ctx.fill();
+    });
+  }
+
+  // ── Input wiring (pad + global keys + first-move timer) ──
+  function wireInputs(){
+    // pad buttons
+    document.querySelectorAll('.pad-btn[data-num]').forEach(btn => {
+      const n = parseInt(btn.dataset.num,10);
+      btn.addEventListener('click', () => {
+        if(focusMode){ setFocusNum(focusNum === n ? 0 : n); return; }
+        if(!selected){ selected = {r:4,c:4}; renderGrid(); }
+        if(!running && !won) startTimer();
+        placeOrNote(selected.r, selected.c, n);
+      });
+    });
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if(!selected) return;
+      if(!running && !won) startTimer();
+      clearCell(selected.r, selected.c);
+    });
+    document.getElementById('btn-notes').addEventListener('click', toggleNotesMode);
+    document.getElementById('btn-focus').addEventListener('click', toggleFocusMode);
+
+    // actions
+    document.getElementById('btn-undo').addEventListener('click', doUndo);
+    document.getElementById('btn-hint').addEventListener('click', () => {
+      if(!running && !won) startTimer();
+      giveHint();
+    });
+    document.getElementById('btn-pause').addEventListener('click', pauseToggle);
+    document.getElementById('btn-restart').addEventListener('click', restartCurrent);
+    document.getElementById('btn-new').addEventListener('click', () => newGame(currentDiff));
+
+    // win buttons
+    document.getElementById('win-new').addEventListener('click', () => { winOverlay.classList.remove('active'); newGame(currentDiff); });
+    document.getElementById('win-again').addEventListener('click', () => { winOverlay.classList.remove('active'); newGame(currentDiff); });
+
+    // global keyboard (when no cell focused)
+    document.addEventListener('keydown', (e) => {
+      if(won) return;
+      if(e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); doUndo(); return; }
+      if(e.key.toLowerCase() === 'p'){ e.preventDefault(); toggleNotesMode(); return; }
+      if(e.key.toLowerCase() === 'f'){ e.preventDefault(); toggleFocusMode(); return; }
+      // focus mode: digits set the focused number (no placement) regardless of selection
+      if(focusMode && e.key >= '1' && e.key <= '9' && document.activeElement.tagName === 'BODY'){
+        e.preventDefault();
+        const n = parseInt(e.key,10);
+        setFocusNum(focusNum === n ? 0 : n);
+        return;
+      }
+      if(!selected){
+        if(e.key >= '1' && e.key <= '9'){
+          selected = {r:4, c:4};
+          renderGrid();
+        }
+      }
+      // numbers when selected handled in cell key, but global fallback
+      if(selected && e.key >= '1' && e.key <= '9' && document.activeElement.tagName === 'BODY'){
+        e.preventDefault();
+        if(!running && !won) startTimer();
+        placeOrNote(selected.r, selected.c, parseInt(e.key,10));
+      }
+      if(selected && (e.key==='0'||e.key==='Backspace'||e.key==='Delete') && document.activeElement.tagName==='BODY'){
+        e.preventDefault();
+        clearCell(selected.r, selected.c);
+      }
+    });
+
+    // prevent pinch zoom on grid
+    gridEl.addEventListener('touchstart', (e)=>{ if(e.touches.length>1) e.preventDefault(); }, {passive:false});
+  }
+  function toggleNotesMode(){
+    notesMode = !notesMode;
+    // Pencil and Focus are mutually exclusive
+    if(notesMode && focusMode) setFocusMode(false);
+    const b = document.getElementById('btn-notes');
+    b.classList.toggle('active', notesMode);
+    b.textContent = notesMode ? '✎ Pencil ✓' : '✎ Pencil';
+  }
+  // ── Number Focus / Highlight mode ──
+  function setFocusMode(on){
+    focusMode = on;
+    const b = document.getElementById('btn-focus');
+    if(b){
+      b.classList.toggle('active', focusMode);
+      b.setAttribute('aria-pressed', focusMode ? 'true' : 'false');
+      b.textContent = focusMode ? '🔦 Focus ✓' : '🔦 Focus';
+    }
+    if(!focusMode){ focusNum = 0; updateFocusPad(); }
+    renderGrid();
+  }
+  function toggleFocusMode(){
+    // Focus and Pencil are mutually exclusive
+    if(!focusMode && notesMode){
+      notesMode = false;
+      const nb = document.getElementById('btn-notes');
+      if(nb){ nb.classList.remove('active'); nb.textContent = '✎ Pencil'; }
+    }
+    setFocusMode(!focusMode);
+  }
+  function setFocusNum(n){
+    focusNum = n;
+    updateFocusPad();
+    renderGrid();
+  }
+  function updateFocusPad(){
+    document.querySelectorAll('.pad-btn[data-num]').forEach(btn => {
+      btn.classList.toggle('focus-active', focusNum !== 0 && parseInt(btn.dataset.num,10) === focusNum);
+    });
+  }
+
+  // ── Boot ──
+  function boot(){
+    initBg();
+
+    // build diff pills
+    updateDiffPills();
+
+    // try resume
+    let resumed = loadState();
+    if(!resumed || !currentGrid){
+      // fresh easy
+      const gen = generatePuzzle('easy');
+      initialPuzzle = copyGrid(gen.puzzle);
+      currentGrid = copyGrid(gen.puzzle);
+      solution = gen.solution;
+      notes = Array.from({length:9},()=>Array(9).fill(0));
+      currentDiff = 'easy';
+      elapsed = 0;
+      hintsUsed = 0;
+      won = false;
+    }else{
+      // ensure arrays
+      if(!initialPuzzle) initialPuzzle = copyGrid(currentGrid);
+    }
+
+    // render first
+    renderGrid();
+    updateHUD();
+    updateDiffPills();
+
+    wireInputs();
+
+    // start timer lazily on first real move (select + num or pad)
+    // but if resumed running state, restart the clock display
+    if(!won && elapsed > 0){
+      // resume ticking if was running
+      running = true;
+      setPauseLabel(true);
+      startTimer();
+    }
+
+    // a11y: first cell focusable
+    setTimeout(()=>{
+      const first = gridEl.querySelector('.cell');
+      if(first) first.setAttribute('aria-label', 'Sudoku cell row 1 column 1');
+    },60);
+
+    // subtle first-interaction hint (like resonance)
+    const hint = document.createElement('div');
+    hint.style.cssText = 'position:fixed;bottom:14px;left:0;right:0;text-align:center;color:rgba(148,163,184,0.22);font-size:11px;letter-spacing:0.03em;pointer-events:none;';
+    hint.textContent = 'tap cells • numbers • pencil for candidates';
+    document.body.appendChild(hint);
+    setTimeout(()=>{ hint.style.transition='opacity 1.2s'; hint.style.opacity='0'; setTimeout(()=>hint.remove(),1200); }, 5200);
+
+    // save periodically
+    setInterval(saveState, 14000);
+
+    // expose tiny for debug if needed (not used in prod)
+    window._sudoku = { newGame, restart: restartCurrent };
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  }else{
+    boot();
+  }
+})();
+</script>
+<!-- AdSense init stub (from shared/ads.js). Currently disabled. Real slots use .ad-slot[data-ad-slot]. -->
+<script>
+(function(){ 'use strict';
+  // Stub — does nothing until CONFIG.enabled=true and publisher/slot IDs filled (see shared/ads.js).
+  // When enabled: dynamically inserts <ins class="adsbygoogle"> into the .ad-slot elements.
+  const CONFIG = { enabled: false, publisherId: 'ca-pub-XXXXXXXXXXXXXXXX', slots: { banner:'XXXXXXXXXX', sidebar:'XXXXXXXXXX' } };
+  function init(){ if(!CONFIG.enabled) return; /* future: load adsbygoogle + push for each .ad-slot */ }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>
