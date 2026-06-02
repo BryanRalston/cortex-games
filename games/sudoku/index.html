@@ -433,6 +433,7 @@ footer a{margin:0 0.4rem}
     <li>Fill the grid so every row, column, and 3×3 box contains 1–9 exactly once.</li>
     <li>Tap a cell then tap a number (or use keyboard 1–9). Use arrows to move.</li>
     <li>Tap <strong>PENCIL</strong> (or hold Shift) to toggle small candidate marks.</li>
+    <li>Tap <strong>FOCUS</strong> 🔦, pick a number to highlight it everywhere (plus its rows &amp; columns), then tap cells to place that number.</li>
     <li>Red numbers = conflict with another in the same row, column or box.</li>
     <li>Undo (or Ctrl/Cmd+Z), limited hints, timer, and best times are saved locally.</li>
     <li>Every puzzle has exactly one solution. Clues are shown in bright text.</li>
@@ -784,12 +785,14 @@ footer a{margin:0 0.4rem}
 
   function selectCell(r,c){
     if(won) return;
-    // don't select if it's a clue and already filled from start? but allow view
     const isClue = initialPuzzle[r][c] !== 0;
-    if(isClue && currentGrid[r][c] !== 0){
-      // still allow select for viewing conflicts
-    }
     selected = {r,c};
+    // Number-first: in Focus mode with a number "picked up", tapping an editable cell drops it in.
+    if(focusMode && focusNum && !isClue){
+      if(!running && !won) startTimer();
+      placeOrNote(r, c, focusNum); // handles scoring, win check, render, save; focusNum stays loaded
+      return;
+    }
     if(currentGrid[r][c]) lastVal = currentGrid[r][c];
     renderGrid();
   }
@@ -800,7 +803,12 @@ footer a{margin:0 0.4rem}
     if(e.key >= '1' && e.key <= '9'){
       e.preventDefault();
       const n = parseInt(e.key,10);
-      if(focusMode){ setFocusNum(focusNum === n ? 0 : n); return; }
+      if(focusMode){
+        // number-first: place into the focused cell, and pick up that number for highlighting
+        if(initialPuzzle[r][c] === 0) placeOrNote(r, c, n);
+        setFocusNum(n);
+        return;
+      }
       placeOrNote(r, c, n);
     }else if(e.key === '0' || e.key === 'Backspace' || e.key === 'Delete'){
       e.preventDefault();
